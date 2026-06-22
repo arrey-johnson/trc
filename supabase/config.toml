@@ -1,0 +1,4 @@
+project_id = "habit-tracker-app"
+
+[api]
+enabled = true

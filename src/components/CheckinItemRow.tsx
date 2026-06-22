@@ -1,0 +1,80 @@
+"use client";
+
+import type { CheckinItemAnswer } from "@/lib/types";
+import { Input } from "./ui";
+
+interface CheckinItemRowProps {
+  item: CheckinItemAnswer;
+  onAnswer: (wasDone: boolean) => void;
+  onReasonChange: (reason: string) => void;
+}
+
+export function CheckinItemRow({
+  item,
+  onAnswer,
+  onReasonChange,
+}: CheckinItemRowProps) {
+  const showReason = item.wasDone === false;
+
+  return (
+    <li className="rounded-2xl border border-stone-200 bg-white p-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="flex-1 text-base font-medium text-stone-900">{item.label}</p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            aria-label={`Mark ${item.label} as done`}
+            onClick={() => onAnswer(true)}
+            className={`flex h-14 w-14 items-center justify-center rounded-xl text-2xl transition ${
+              item.wasDone === true
+                ? "bg-emerald-100 ring-2 ring-emerald-500"
+                : "bg-stone-100 hover:bg-emerald-50"
+            }`}
+          >
+            ✅
+          </button>
+          <button
+            type="button"
+            aria-label={`Mark ${item.label} as not done`}
+            onClick={() => onAnswer(false)}
+            className={`flex h-14 w-14 items-center justify-center rounded-xl text-2xl transition ${
+              item.wasDone === false
+                ? "bg-red-100 ring-2 ring-red-500"
+                : "bg-stone-100 hover:bg-red-50"
+            }`}
+          >
+            ❌
+          </button>
+        </div>
+      </div>
+      {showReason && (
+        <div className="mt-3">
+          <label className="mb-1 block text-sm text-stone-600">
+            Why wasn&apos;t this done?
+          </label>
+          <Input
+            value={item.reasonIfNotDone}
+            onChange={(e) => onReasonChange(e.target.value)}
+            placeholder="Short reason..."
+            autoFocus
+          />
+        </div>
+      )}
+      {item.wasDone === null && (
+        <p className="mt-2 text-xs text-amber-700">Tap ✅ or ❌ to answer</p>
+      )}
+    </li>
+  );
+}
+
+export function allItemsAnswered(items: CheckinItemAnswer[]): boolean {
+  return items.every((item) => item.wasDone !== null);
+}
+
+export function allReasonsValid(items: CheckinItemAnswer[]): boolean {
+  return items.every(
+    (item) =>
+      item.wasDone === true ||
+      (item.wasDone === false && item.reasonIfNotDone.trim().length > 0)
+  );
+}

@@ -1,0 +1,134 @@
+import Link from "next/link";
+import type { ButtonHTMLAttributes, InputHTMLAttributes } from "react";
+
+const baseBtnStyles =
+  "inline-flex min-h-12 items-center justify-center rounded-xl px-4 text-base font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50";
+
+const buttonVariants = {
+  primary: "bg-emerald-600 text-white hover:bg-emerald-700",
+  secondary: "bg-stone-100 text-stone-900 hover:bg-stone-200",
+  ghost: "bg-transparent text-stone-700 hover:bg-stone-100",
+  danger: "bg-red-600 text-white hover:bg-red-700",
+};
+
+type ButtonVariant = keyof typeof buttonVariants;
+
+export function Button({
+  variant = "primary",
+  className = "",
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: ButtonVariant;
+}) {
+  return (
+    <button
+      className={`${baseBtnStyles} w-full ${buttonVariants[variant]} ${className}`}
+      {...props}
+    />
+  );
+}
+
+export function ButtonLink({
+  href,
+  variant = "primary",
+  className = "",
+  children,
+  prefetch = true,
+}: {
+  href: string;
+  variant?: ButtonVariant;
+  className?: string;
+  children: React.ReactNode;
+  prefetch?: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      prefetch={prefetch}
+      scroll={false}
+      className={`${baseBtnStyles} ${buttonVariants[variant]} ${className}`}
+    >
+      {children}
+    </Link>
+  );
+}
+
+export function Input({
+  className = "",
+  ...props
+}: InputHTMLAttributes<HTMLInputElement>) {
+  return (
+    <input
+      className={`min-h-12 w-full rounded-xl border border-stone-200 bg-white px-4 text-base text-stone-900 placeholder:text-stone-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 ${className}`}
+      {...props}
+    />
+  );
+}
+
+export function Label({
+  children,
+  htmlFor,
+}: {
+  children: React.ReactNode;
+  htmlFor?: string;
+}) {
+  return (
+    <label
+      htmlFor={htmlFor}
+      className="mb-1.5 block text-sm font-medium text-stone-700"
+    >
+      {children}
+    </label>
+  );
+}
+
+export function Card({
+  children,
+  className = "",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`rounded-2xl border border-stone-200 bg-white p-4 shadow-sm ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+export function PageShell({
+  children,
+  title,
+  subtitle,
+  action,
+}: {
+  children: React.ReactNode;
+  title?: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="mx-auto min-h-screen max-w-md bg-stone-100 px-4 py-5 pb-32">
+      {(title || subtitle || action) && (
+        <header className="mb-6">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              {title && (
+                <h1 className="text-2xl font-bold tracking-tight text-stone-900">
+                  {title}
+                </h1>
+              )}
+              {subtitle && (
+                <p className="mt-1 text-sm text-stone-600">{subtitle}</p>
+              )}
+            </div>
+            {action}
+          </div>
+        </header>
+      )}
+      {children}
+    </div>
+  );
+}
