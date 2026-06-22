@@ -50,7 +50,9 @@ npm run generate-vapid   # prints VAPID + CRON_SECRET to paste into .env.local
 2. Add env vars from `.env.example` (use `npm run generate-vapid` for VAPID + cron secret).
 3. Get **service role key** from Supabase → Settings → API (server-only, never expose to client).
 4. On a phone: open the app → **Add to Home Screen** → Settings → **Enable notifications**.
-5. Cron runs every 15 minutes on Vercel (`vercel.json`). Test locally:
+5. Cron runs **once daily** at 21:00 UTC (`vercel.json`) — Vercel Hobby limit. Each run sends any reminders whose local time has already passed that day. Upgrade to Pro for more frequent cron.
+
+Test locally:
 
 ```bash
 curl -H "Authorization: Bearer YOUR_CRON_SECRET" http://localhost:3000/api/cron/reminders

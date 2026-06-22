@@ -5,7 +5,8 @@ import { sendWebPush, isPushConfigured } from "@/lib/push/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { RoutineType } from "@/lib/types";
 
-const CRON_WINDOW_MINUTES = 15;
+// Hobby plan: Vercel allows one cron run per day. We batch-send all reminders
+// whose local time has passed and haven't been sent yet (per user timezone).
 const ESCALATION_HOURS = 2;
 
 function normalizeTime(t: string): string {
@@ -30,14 +31,14 @@ export function getLocalHHMM(timezone: string): string {
   return `${hour}:${minute}`;
 }
 
-export function isReminderDue(
+/** True when the user's local clock is at or past their reminder time today. */
+export function isReminderPastDue(
   reminderTime: string,
-  currentHHMM: string,
-  windowMinutes = CRON_WINDOW_MINUTES
+  currentHHMM: string
 ): boolean {
   const due = timeToMinutes(reminderTime);
   const now = timeToMinutes(currentHHMM);
-  return now >= due && now < due + windowMinutes;
+  return now >= due;
 }
 
 function buildRoutineBody(labels: string[]): string {
@@ -240,7 +241,7 @@ export async function processRoutineReminders(): Promise<{
       if (await hasCheckinToday(user.id, type, today)) continue;
 
       if (
-        isReminderDue(reminderTime, nowLocal) &&
+        isReminderPastDue(reminderTime, nowLocal) &&
         !(await reminderAlreadySent(user.id, today, "first", type))
       ) {
         const labels = await getRoutineItemLabels(user.id, type);
