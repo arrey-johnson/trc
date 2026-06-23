@@ -104,6 +104,8 @@ button {
 }
 
 #app-splash.app-splash--hide {
+  display: none !important;
   opacity: 0;
   pointer-events: none;
+  visibility: hidden;
 }

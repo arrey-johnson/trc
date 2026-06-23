@@ -76,7 +76,7 @@ export default function RootLayout({
         <SplashStartupLinks />
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){function h(){var s=document.getElementById('app-splash');if(s&&!s.classList.contains('app-splash--hide')){s.classList.add('app-splash--hide');setTimeout(function(){s.remove()},400)}}if(document.readyState==='complete')requestAnimationFrame(h);else window.addEventListener('load',h,{once:true});setTimeout(h,4000)})();`,
+            __html: `(function(){function h(){var s=document.getElementById('app-splash');if(s&&!s.classList.contains('app-splash--hide')){s.classList.add('app-splash--hide');s.setAttribute('aria-hidden','true')}}if(document.readyState==='complete')requestAnimationFrame(h);else window.addEventListener('load',h,{once:true});setTimeout(h,4000)})();`,
           }}
           suppressHydrationWarning
         />

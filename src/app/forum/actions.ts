@@ -181,12 +181,20 @@ export async function updateForumPost(postId: string, formData: FormData) {
     updates.category = category;
   }
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from("forum_posts")
     .update(updates)
-    .eq("id", postId);
+    .eq("id", postId)
+    .select("id")
+    .maybeSingle();
 
   if (error) return { error: error.message };
+  if (!data) {
+    return {
+      error:
+        "Could not save your edit. If this keeps happening, run Supabase migration 008_forum_post_edit.sql.",
+    };
+  }
 
   revalidatePath("/forum");
   revalidatePath("/admin/forum");

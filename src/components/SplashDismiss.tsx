@@ -6,7 +6,7 @@ function hideSplash() {
   const splash = document.getElementById("app-splash");
   if (!splash || splash.classList.contains("app-splash--hide")) return;
   splash.classList.add("app-splash--hide");
-  window.setTimeout(() => splash.remove(), 400);
+  splash.setAttribute("aria-hidden", "true");
 }
 
 export function SplashDismiss() {

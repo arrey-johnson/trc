@@ -3,7 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { replyToPost, togglePostLike } from "@/app/forum/actions";
-import { OwnPostContent } from "@/components/forum/OwnPostContent";
+import {
+  PostEditForm,
+  PostOwnerMenu,
+  usePostAuthorActions,
+} from "@/components/forum/PostAuthorActions";
 import { PostActionsBar } from "@/components/forum/PostActionsBar";
 import { Button } from "@/components/ui";
 import {
@@ -23,29 +27,56 @@ function ReplyCard({
   currentUserId: string;
 }) {
   const isAuthor = post.author_id === currentUserId;
+  const authorActions = usePostAuthorActions({
+    postId: post.id,
+    body: post.body,
+    category: post.category,
+    isReply: true,
+  });
 
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--elevated)] p-3">
-      <div className="flex items-center gap-2 text-sm">
-        <span className="font-semibold text-[var(--foreground)]">
-          {post.author?.display_name ?? "Member"}
-        </span>
-        <span className="text-xs text-[var(--muted)]">
-          {formatPostDate(post.created_at, timezone)}
-        </span>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 text-sm">
+            <span className="font-semibold text-[var(--foreground)]">
+              {post.author?.display_name ?? "Member"}
+            </span>
+            <span className="text-xs text-[var(--muted)]">
+              {formatPostDate(post.created_at, timezone)}
+            </span>
+          </div>
+        </div>
+        {isAuthor && !authorActions.editing && (
+          <PostOwnerMenu
+            onEdit={authorActions.startEdit}
+            onDelete={authorActions.deletePost}
+            pending={authorActions.pending}
+          />
+        )}
       </div>
-      {isAuthor ? (
-        <OwnPostContent
-          postId={post.id}
-          body={post.body}
-          category={post.category}
+
+      {isAuthor && authorActions.editing ? (
+        <PostEditForm
+          body={authorActions.body}
+          category={authorActions.category}
           isReply
-          bodyClassName="mt-1 text-sm text-[var(--foreground)]"
+          remaining={authorActions.remaining}
+          error={authorActions.error}
+          pending={authorActions.pending}
+          onBodyChange={authorActions.setBody}
+          onCategoryChange={authorActions.setCategory}
+          onSubmit={authorActions.saveEdit}
+          onCancel={authorActions.cancelEdit}
         />
       ) : (
         <p className="mt-1 whitespace-pre-wrap text-sm text-[var(--foreground)]">
           {post.body}
         </p>
+      )}
+
+      {isAuthor && authorActions.error && !authorActions.editing && (
+        <p className="mt-1 text-xs text-red-600">{authorActions.error}</p>
       )}
     </div>
   );
@@ -70,6 +101,13 @@ export function PostThread({
 
   const remaining = FORUM_MAX_CHARS - body.length;
   const isAuthor = post.author_id === currentUserId;
+  const authorActions = usePostAuthorActions({
+    postId: post.id,
+    body: post.body,
+    category: post.category,
+    deleteRedirect: "/forum",
+  });
+
   const shareData = {
     authorName: post.author?.display_name ?? "Member",
     body: post.body,
@@ -111,27 +149,47 @@ export function PostThread({
             {(post.author?.display_name ?? "?")[0]?.toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold">{post.author?.display_name}</span>
-              <span className="text-xs text-[var(--muted)]">
-                {formatPostDate(post.created_at, timezone)}
-              </span>
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">{post.author?.display_name}</span>
+                  <span className="text-xs text-[var(--muted)]">
+                    {formatPostDate(post.created_at, timezone)}
+                  </span>
+                </div>
+                <span className="text-xs text-emerald-700 dark:text-emerald-400">
+                  {forumCategoryLabel(post.category)}
+                </span>
+              </div>
+              {isAuthor && !authorActions.editing && (
+                <PostOwnerMenu
+                  onEdit={authorActions.startEdit}
+                  onDelete={authorActions.deletePost}
+                  pending={authorActions.pending}
+                />
+              )}
             </div>
-            <span className="text-xs text-emerald-700 dark:text-emerald-400">
-              {forumCategoryLabel(post.category)}
-            </span>
-            {isAuthor ? (
-              <OwnPostContent
-                postId={post.id}
-                body={post.body}
-                category={post.category}
-                deleteRedirect="/forum"
-                bodyClassName="mt-2 text-base leading-relaxed text-[var(--foreground)]"
+
+            {isAuthor && authorActions.editing ? (
+              <PostEditForm
+                body={authorActions.body}
+                category={authorActions.category}
+                remaining={authorActions.remaining}
+                error={authorActions.error}
+                pending={authorActions.pending}
+                onBodyChange={authorActions.setBody}
+                onCategoryChange={authorActions.setCategory}
+                onSubmit={authorActions.saveEdit}
+                onCancel={authorActions.cancelEdit}
               />
             ) : (
               <p className="mt-2 whitespace-pre-wrap text-base leading-relaxed">
                 {post.body}
               </p>
+            )}
+
+            {isAuthor && authorActions.error && !authorActions.editing && (
+              <p className="mt-1 text-xs text-red-600">{authorActions.error}</p>
             )}
           </div>
         </div>
