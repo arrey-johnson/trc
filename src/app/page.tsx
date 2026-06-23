@@ -44,6 +44,10 @@ export default async function HomePage() {
     redirect("/onboarding");
   }
 
+  if (profile.whatsapp_group_role === "admin") {
+    redirect("/admin");
+  }
+
   const supabase = createClient();
   const today = getTodayInTimezone(profile.timezone);
   const friendlyDate = formatReportDate(today, profile.timezone);
@@ -191,14 +195,6 @@ export default async function HomePage() {
           );
         })}
       </div>
-
-      {profile.whatsapp_group_role === "admin" && (
-        <div className="mt-6">
-          <ButtonLink href="/admin" variant="secondary" className="w-full">
-            Open admin dashboard
-          </ButtonLink>
-        </div>
-      )}
     </PageShell>
   );
 }

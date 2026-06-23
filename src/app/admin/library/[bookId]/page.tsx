@@ -29,6 +29,7 @@ export default async function AdminBookDetailPage({ params }: AdminBookPageProps
         .from("users")
         .select("id, display_name")
         .eq("onboarding_complete", true)
+        .neq("whatsapp_group_role", "admin")
         .order("display_name"),
       supabase
         .from("book_assignments")
@@ -114,15 +115,22 @@ export default async function AdminBookDetailPage({ params }: AdminBookPageProps
       <Card className="space-y-3 p-5">
         <h2 className="font-semibold text-[var(--foreground)]">Assign members</h2>
         <div className="space-y-2">
-          {(members ?? []).map((m) => (
-            <MemberAssignToggle
-              key={m.id}
-              bookId={book.id}
-              userId={m.id}
-              displayName={m.display_name}
-              assigned={assignedSet.has(m.id)}
-            />
-          ))}
+          {(members ?? []).length === 0 ? (
+            <p className="text-sm text-[var(--muted)]">
+              No onboarded members yet. Books can still be uploaded and assigned
+              later.
+            </p>
+          ) : (
+            (members ?? []).map((m) => (
+              <MemberAssignToggle
+                key={m.id}
+                bookId={book.id}
+                userId={m.id}
+                displayName={m.display_name}
+                assigned={assignedSet.has(m.id)}
+              />
+            ))
+          )}
         </div>
       </Card>
     </>

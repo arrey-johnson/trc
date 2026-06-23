@@ -35,8 +35,8 @@ export default async function AdminCommitmentPage() {
           {(Object.keys(TIER_LABELS) as CommitmentTier[]).map((tier) => {
             const count = data.tierCounts[tier];
             const pct =
-              data.totalMembers > 0
-                ? Math.round((count / data.totalMembers) * 100)
+              data.onboardedCount > 0
+                ? Math.round((count / data.onboardedCount) * 100)
                 : 0;
             return (
               <div key={tier} className="flex items-center gap-3">
@@ -62,7 +62,12 @@ export default async function AdminCommitmentPage() {
         <h2 className="mb-3 font-semibold text-[var(--foreground)]">
           7-day heatmap
         </h2>
-        <table className="w-full min-w-[320px] text-xs">
+        {activeMembers.length === 0 ? (
+          <p className="text-sm text-[var(--muted)]">
+            No onboarded members to display.
+          </p>
+        ) : (
+          <table className="w-full min-w-[320px] text-xs">
           <thead>
             <tr>
               <th className="pb-2 text-left font-medium text-[var(--muted)]">
@@ -115,6 +120,7 @@ export default async function AdminCommitmentPage() {
             ))}
           </tbody>
         </table>
+        )}
         <p className="mt-2 text-[10px] text-[var(--muted)]">
           For per-routine detail, open a member profile.
         </p>
@@ -125,7 +131,10 @@ export default async function AdminCommitmentPage() {
           Today&apos;s slots
         </h2>
         <ul className="space-y-2">
-          {activeMembers.map((m) => (
+          {activeMembers.length === 0 ? (
+            <li className="text-sm text-[var(--muted)]">No onboarded members.</li>
+          ) : (
+            activeMembers.map((m) => (
             <li
               key={m.userId}
               className="flex items-center justify-between text-sm"
@@ -140,7 +149,8 @@ export default async function AdminCommitmentPage() {
                 ☀️ {slotEmoji(m.todayMorning)} 🌙 {slotEmoji(m.todayEvening)}
               </span>
             </li>
-          ))}
+            ))
+          )}
         </ul>
       </Card>
 

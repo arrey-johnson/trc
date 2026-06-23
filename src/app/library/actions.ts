@@ -1,82 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { todayForUser } from "@/lib/books";
 import { getCurrentUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-
-export async function uploadBook(formData: FormData) {
-  const admin = await requireAdmin();
-
-  const title = String(formData.get("title") ?? "").trim();
-  const author = String(formData.get("author") ?? "").trim();
-  const description = String(formData.get("description") ?? "").trim();
-  const pageCount = Number(formData.get("page_count"));
-  const file = formData.get("pdf") as File | null;
-  const assignAll = formData.get("assign_all") === "on";
-
-  if (!title) return { error: "Title is required." };
-  if (!file || file.size === 0) return { error: "PDF file is required." };
-  if (file.type !== "application/pdf") return { error: "File must be a PDF." };
-  if (!pageCount || pageCount < 1) return { error: "Invalid page count." };
-
-  const bookId = crypto.randomUUID();
-  const storagePath = `${bookId}.pdf`;
-  const adminClient = createAdminClient();
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const { error: uploadError } = await adminClient.storage
-    .from("books")
-    .upload(storagePath, buffer, {
-      contentType: "application/pdf",
-      upsert: false,
-    });
-
-  if (uploadError) return { error: uploadError.message };
-
-  const { data: book, error: bookError } = await adminClient
-    .from("books")
-    .insert({
-      id: bookId,
-      title,
-      author,
-      description,
-      storage_path: storagePath,
-      page_count: pageCount,
-      created_by: admin.id,
-    })
-    .select("id")
-    .single();
-
-  if (bookError || !book) {
-    await adminClient.storage.from("books").remove([storagePath]);
-    return { error: bookError?.message ?? "Failed to save book." };
-  }
-
-  if (assignAll) {
-    const { data: members } = await adminClient
-      .from("users")
-      .select("id")
-      .eq("onboarding_complete", true);
-
-    if (members?.length) {
-      await adminClient.from("book_assignments").insert(
-        members.map((m) => ({
-          book_id: book.id,
-          user_id: m.id,
-          assigned_by: admin.id,
-        }))
-      );
-    }
-  }
-
-  revalidatePath("/admin/library");
-  revalidatePath("/library");
-  redirect(`/admin/library/${book.id}`);
-}
 
 export async function assignBookToUser(bookId: string, userId: string) {
   const admin = await requireAdmin();

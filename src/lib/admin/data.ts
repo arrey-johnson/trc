@@ -44,6 +44,7 @@ export async function fetchAllMemberStats(
   const { data: users } = await supabase
     .from("users")
     .select("*")
+    .neq("whatsapp_group_role", "admin")
     .order("display_name");
 
   if (!users?.length) return [];
@@ -149,6 +150,7 @@ export async function fetchAdminDashboard(
     inactive: 0,
   };
   for (const m of members) {
+    if (!m.onboardingComplete) continue;
     tierCounts[m.tier] += 1;
   }
 
@@ -168,13 +170,13 @@ export async function fetchAdminDashboard(
     }
   }
 
-  const totalLogged = members.reduce((s, m) => s + m.loggedCount, 0);
-  const totalSlots = members.reduce((s, m) => s + m.totalSlots, 0);
+  const totalLogged = activeMembers.reduce((s, m) => s + m.loggedCount, 0);
+  const totalSlots = activeMembers.reduce((s, m) => s + m.totalSlots, 0);
   const groupLogRate7d =
     totalSlots > 0 ? Math.round((totalLogged / totalSlots) * 100) : 0;
 
   const reasonCounts = new Map<string, number>();
-  for (const m of members) {
+  for (const m of activeMembers) {
     for (const { reason, count } of m.topMissReasons) {
       reasonCounts.set(reason, (reasonCounts.get(reason) ?? 0) + count);
     }
@@ -187,7 +189,7 @@ export async function fetchAdminDashboard(
   const adminToday = getTodayInTimezone();
   const trendDates = getTrendDates(adminToday, 7);
 
-  const userIds = members.map((m) => m.userId);
+  const userIds = activeMembers.map((m) => m.userId);
   const { data: trendCheckins } = userIds.length
     ? await supabase
         .from("checkins")
@@ -216,7 +218,7 @@ export async function fetchAdminDashboard(
   const trendDays = trendDates.map((date) => ({
     date,
     logRate: groupDayLogRate(
-      members,
+      activeMembers,
       date,
       trendCheckins ?? [],
       routineCountByUser

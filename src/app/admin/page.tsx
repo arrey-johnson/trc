@@ -20,6 +20,7 @@ export default async function AdminOverviewPage() {
   const data = await fetchAdminDashboard(supabase);
 
   const needsAttention = data.members
+    .filter((m) => m.onboardingComplete)
     .filter(
       (m) =>
         m.tier === "at_risk" ||
@@ -82,41 +83,52 @@ export default async function AdminOverviewPage() {
         <h2 className="font-semibold text-[var(--foreground)]">
           Commitment tiers
         </h2>
-        <div className="flex flex-wrap gap-2">
-          {(Object.keys(TIER_LABELS) as CommitmentTier[]).map((tier) => (
-            <div key={tier} className="flex items-center gap-1.5">
-              <CommitmentBadge tier={tier} />
-              <span className="text-sm font-medium text-[var(--muted)]">
-                {data.tierCounts[tier]}
-              </span>
-            </div>
-          ))}
-        </div>
+        {data.onboardedCount === 0 ? (
+          <p className="text-sm text-[var(--muted)]">
+            No onboarded members yet. Stats will appear when members join and
+            complete onboarding.
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {(Object.keys(TIER_LABELS) as CommitmentTier[]).map((tier) => (
+              <div key={tier} className="flex items-center gap-1.5">
+                <CommitmentBadge tier={tier} />
+                <span className="text-sm font-medium text-[var(--muted)]">
+                  {data.tierCounts[tier]}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       <Card className="mb-4 space-y-2 p-4">
         <h2 className="font-semibold text-[var(--foreground)]">
           7-day group trend
         </h2>
-        <div className="flex items-end gap-1.5">
-          {data.trendDays.map((day) => (
-            <div
-              key={day.date}
-              className="flex flex-1 flex-col items-center gap-1"
-            >
+        {data.onboardedCount === 0 ? (
+          <p className="text-sm text-[var(--muted)]">No activity to show yet.</p>
+        ) : (
+          <div className="flex items-end gap-1.5">
+            {data.trendDays.map((day) => (
               <div
-                className="w-full rounded-t-md bg-indigo-500/80"
-                style={{
-                  height: `${Math.max(4, (day.logRate / 100) * 48)}px`,
-                }}
-                title={`${day.date}: ${day.logRate}%`}
-              />
-              <span className="text-[9px] text-[var(--muted)]">
-                {day.date.slice(8)}
-              </span>
-            </div>
-          ))}
-        </div>
+                key={day.date}
+                className="flex flex-1 flex-col items-center gap-1"
+              >
+                <div
+                  className="w-full rounded-t-md bg-indigo-500/80"
+                  style={{
+                    height: `${Math.max(4, (day.logRate / 100) * 48)}px`,
+                  }}
+                  title={`${day.date}: ${day.logRate}%`}
+                />
+                <span className="text-[9px] text-[var(--muted)]">
+                  {day.date.slice(8)}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </Card>
 
       {data.topGroupMissReasons.length > 0 && (
@@ -144,7 +156,9 @@ export default async function AdminOverviewPage() {
         </h2>
         {needsAttention.length === 0 ? (
           <Card className="p-4 text-center text-sm text-[var(--muted)]">
-            Everyone is on track today 🎉
+            {data.onboardedCount === 0
+              ? "No onboarded members yet."
+              : "Everyone is on track today 🎉"}
           </Card>
         ) : (
           needsAttention.map((member) => (

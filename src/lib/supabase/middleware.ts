@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { getDefaultAppPath } from "@/lib/auth-routes";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -31,6 +32,8 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
   const isAuthRoute = pathname.startsWith("/auth");
+  const isPasswordRecoveryRoute =
+    pathname === "/auth/reset-password" || pathname === "/auth/callback";
   const isPublicAsset =
     pathname.startsWith("/_next") ||
     pathname.startsWith("/icons") ||
@@ -44,17 +47,30 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && isAuthRoute) {
+  if (user && isAuthRoute && !isPasswordRecoveryRoute) {
     const { data: profile } = await supabase
       .from("users")
-      .select("onboarding_complete")
+      .select("onboarding_complete, whatsapp_group_role")
       .eq("id", user.id)
       .maybeSingle();
 
     const url = request.nextUrl.clone();
-    url.pathname =
-      !profile || !profile.onboarding_complete ? "/onboarding" : "/";
+    url.pathname = getDefaultAppPath(profile);
     return NextResponse.redirect(url);
+  }
+
+  if (user && pathname === "/") {
+    const { data: profile } = await supabase
+      .from("users")
+      .select("onboarding_complete, whatsapp_group_role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profile?.whatsapp_group_role === "admin" && profile.onboarding_complete) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

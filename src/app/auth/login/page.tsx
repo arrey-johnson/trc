@@ -3,7 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button, Card, Input, Label, PageShell } from "@/components/ui";
+import { AuthShell } from "@/components/auth/AuthShell";
+import { PasswordInput } from "@/components/auth/PasswordInput";
+import { Button, Input, Label } from "@/components/ui";
+import { getDefaultAppPath } from "@/lib/auth-routes";
 import { friendlyDbError } from "@/lib/db-errors";
 import { createClient } from "@/lib/supabase/client";
 
@@ -71,71 +74,81 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-    }
 
-    router.push("/");
+      const { data: profile } = await supabase
+        .from("users")
+        .select("onboarding_complete, whatsapp_group_role")
+        .eq("id", data.user.id)
+        .maybeSingle();
+
+      router.push(getDefaultAppPath(profile));
+    } else {
+      router.push("/");
+    }
     router.refresh();
   }
 
   return (
-    <PageShell
-      title="The Reset Circle App"
-      subtitle="Sign in with your email and password."
+    <AuthShell
+      title="Welcome back"
+      subtitle="Sign in to continue your daily check-ins and stay accountable with your circle."
+      footer={
+        <p className="text-sm text-[var(--muted)]">
+          New here?{" "}
+          <Link
+            href="/auth/signup"
+            className="font-semibold text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-400"
+          >
+            Create an account
+          </Link>
+        </p>
+      }
     >
-      <Card>
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
+      <form onSubmit={handleLogin} className="space-y-5">
+        <div>
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            autoComplete="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
 
-          <div>
+        <div>
+          <div className="mb-1.5 flex items-center justify-between gap-2">
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-          </div>
-
-          {error && <p className="text-sm text-red-600">{error}</p>}
-
-          <Button type="submit" disabled={loading}>
-            {loading ? "Signing in..." : "Sign in"}
-          </Button>
-
-          <p className="text-center text-sm text-[var(--muted)]">
-            New here?{" "}
-            <Link href="/auth/signup" className="font-medium text-emerald-700 underline">
-              Create an account
-            </Link>
-          </p>
-          <p className="text-center">
-            <button
-              type="button"
-              className="text-xs text-[var(--muted)] underline"
-              onClick={async () => {
-                await supabase.auth.signOut();
-                router.push("/auth/login");
-                router.refresh();
-              }}
+            <Link
+              href="/auth/forgot-password"
+              className="text-xs font-medium text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-400"
             >
-              Sign out
-            </button>
+              Forgot password?
+            </Link>
+          </div>
+          <PasswordInput
+            id="password"
+            hideLabel
+            autoComplete="current-password"
+            placeholder="Your password"
+            value={password}
+            onChange={setPassword}
+            required
+          />
+        </div>
+
+        {error && (
+          <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
+            {error}
           </p>
-        </form>
-      </Card>
-    </PageShell>
+        )}
+
+        <Button type="submit" disabled={loading}>
+          {loading ? "Signing in..." : "Sign in"}
+        </Button>
+      </form>
+    </AuthShell>
   );
 }

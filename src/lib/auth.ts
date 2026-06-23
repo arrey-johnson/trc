@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { User } from "@/lib/types";
 
+export { getDefaultAppPath } from "@/lib/auth-routes";
+
 export async function getAuthUser() {
   const supabase = createClient();
   const {

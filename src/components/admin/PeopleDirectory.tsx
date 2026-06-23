@@ -34,7 +34,8 @@ export function PeopleDirectory({ members }: { members: MemberStats[] }) {
           People
         </h1>
         <p className="mt-1 text-sm text-[var(--muted)]">
-          {members.length} members · tap for detail
+          {members.filter((m) => m.onboardingComplete).length} onboarded members
+          · tap for detail
         </p>
       </header>
 
@@ -76,7 +77,9 @@ export function PeopleDirectory({ members }: { members: MemberStats[] }) {
 
       {filtered.length === 0 ? (
         <Card className="p-4 text-center text-sm text-[var(--muted)]">
-          No members match your filters.
+          {members.length === 0
+            ? "No members have joined yet."
+            : "No members match your filters."}
         </Card>
       ) : (
         <div className="space-y-3">

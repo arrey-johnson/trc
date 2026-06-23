@@ -31,6 +31,7 @@ export function SettingsForm({ profile }: { profile: User }) {
   );
   const [timezone, setTimezone] = useState(profile.timezone);
   const [saving, setSaving] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -60,6 +61,14 @@ export function SettingsForm({ profile }: { profile: User }) {
     }
 
     setMessage("Settings saved.");
+    router.refresh();
+  }
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    setError(null);
+    await supabase.auth.signOut();
+    router.push("/auth/login");
     router.refresh();
   }
 
@@ -138,6 +147,21 @@ export function SettingsForm({ profile }: { profile: User }) {
               {saving ? "Saving..." : "Save reminder times"}
             </Button>
           </form>
+        </Card>
+
+        <Card className="space-y-3 p-4">
+          <h2 className="font-semibold text-[var(--foreground)]">Account</h2>
+          <p className="text-sm text-[var(--muted)]">
+            Signed in as {profile.display_name || profile.email}
+          </p>
+          <Button
+            type="button"
+            variant="danger"
+            disabled={loggingOut}
+            onClick={handleLogout}
+          >
+            {loggingOut ? "Signing out..." : "Log out"}
+          </Button>
         </Card>
       </div>
     </PageShell>

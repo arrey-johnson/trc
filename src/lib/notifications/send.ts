@@ -220,7 +220,8 @@ export async function processRoutineReminders(): Promise<{
     .select(
       "id, timezone, morning_reminder_time, evening_reminder_time, onboarding_complete"
     )
-    .eq("onboarding_complete", true);
+    .eq("onboarding_complete", true)
+    .neq("whatsapp_group_role", "admin");
 
   let firstSent = 0;
   let escalationSent = 0;
