@@ -33,6 +33,7 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isAuthRoute = pathname.startsWith("/auth");
   const isCronRoute = pathname.startsWith("/api/cron");
+  const isPushConfigRoute = pathname.startsWith("/api/push");
   const isPasswordRecoveryRoute =
     pathname === "/auth/reset-password" || pathname === "/auth/callback";
   const isPublicAsset =
@@ -42,7 +43,7 @@ export async function updateSession(request: NextRequest) {
     pathname === "/manifest.webmanifest" ||
     pathname === "/sw.js";
 
-  if (!user && !isAuthRoute && !isPublicAsset && !isCronRoute) {
+  if (!user && !isAuthRoute && !isPublicAsset && !isCronRoute && !isPushConfigRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/auth/login";
     return NextResponse.redirect(url);
