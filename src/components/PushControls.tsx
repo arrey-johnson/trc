@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   getNotificationPermission,
+  isPushConfiguredOnServer,
   isPushSupported,
   needsIosInstallForPush,
   registerServiceWorker,
@@ -27,7 +28,12 @@ export function PushControls({
   const [status, setStatus] = useState<Status>("idle");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [pushConfigured, setPushConfigured] = useState<boolean | null>(null);
   const supabase = createClient();
+
+  useEffect(() => {
+    void isPushConfiguredOnServer().then(setPushConfigured);
+  }, []);
 
   const refreshStatus = useCallback(async () => {
     if (!isPushSupported()) {
@@ -147,7 +153,7 @@ export function PushControls({
   }
 
   const iosInstallRequired = needsIosInstallForPush();
-  const pushConfigured = Boolean(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY);
+  const pushReady = pushConfigured === true;
 
   const content = (
     <div className="space-y-3">
@@ -156,7 +162,7 @@ export function PushControls({
         forum updates — even when the app is closed.
       </p>
 
-      {!pushConfigured && (
+      {pushConfigured === false && (
         <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
           Push is not configured on the server yet. Ask your admin to add VAPID
           keys to the deployment environment.
@@ -197,7 +203,7 @@ export function PushControls({
         <Button
           type="button"
           onClick={handleEnable}
-          disabled={busy || status === "denied" || !pushConfigured || iosInstallRequired}
+          disabled={busy || status === "denied" || !pushReady || iosInstallRequired}
           className="sm:w-auto"
         >
           {busy ? "Enabling..." : "Enable notifications"}

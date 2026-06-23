@@ -11,7 +11,8 @@
     "start": "next start",
     "lint": "next lint",
     "generate-vapid": "node scripts/generate-vapid.mjs",
-    "verify-push": "node scripts/verify-push-config.mjs"
+    "verify-push": "node scripts/verify-push-config.mjs",
+    "push-vercel-env": "node scripts/push-vercel-env.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

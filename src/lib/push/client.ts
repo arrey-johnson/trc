@@ -1,5 +1,7 @@
 import type { PushSubscriptionJSON } from "@/lib/notifications/types";
 
+let cachedPublicKey: string | null | undefined;
+
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -9,6 +11,39 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
     output[i] = raw.charCodeAt(i);
   }
   return output;
+}
+
+/** Resolve VAPID public key from build env or live server config. */
+export async function getVapidPublicKey(): Promise<string | null> {
+  if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
+    return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  }
+
+  if (cachedPublicKey !== undefined) {
+    return cachedPublicKey;
+  }
+
+  try {
+    const response = await fetch("/api/push/config", { cache: "no-store" });
+    if (!response.ok) {
+      cachedPublicKey = null;
+      return null;
+    }
+    const data = (await response.json()) as {
+      configured?: boolean;
+      publicKey?: string | null;
+    };
+    cachedPublicKey = data.configured && data.publicKey ? data.publicKey : null;
+    return cachedPublicKey;
+  } catch {
+    cachedPublicKey = null;
+    return null;
+  }
+}
+
+export async function isPushConfiguredOnServer(): Promise<boolean> {
+  const key = await getVapidPublicKey();
+  return Boolean(key);
 }
 
 export function isPushSupported(): boolean {
@@ -70,7 +105,7 @@ export async function subscribeToPush(
     endpoint: string;
   }) => Promise<{ error: Error | null }>
 ): Promise<{ ok: boolean; error?: string }> {
-  const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  const vapidKey = await getVapidPublicKey();
   if (!vapidKey) {
     return { ok: false, error: "Push is not configured on this server." };
   }
@@ -89,9 +124,7 @@ export async function subscribeToPush(
   if (!subscription) {
     subscription = await reg.pushManager.subscribe({
       userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(
-        vapidKey
-      ) as BufferSource,
+      applicationServerKey: urlBase64ToUint8Array(vapidKey) as BufferSource,
     });
   }
 
@@ -123,7 +156,9 @@ export async function syncPushSubscription(
   }) => Promise<{ error: Error | null }>
 ): Promise<void> {
   if (!isPushSupported() || Notification.permission !== "granted") return;
-  if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) return;
+
+  const vapidKey = await getVapidPublicKey();
+  if (!vapidKey) return;
 
   const reg = await registerServiceWorker();
   if (!reg) return;
