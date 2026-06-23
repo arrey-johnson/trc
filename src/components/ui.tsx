@@ -5,10 +5,14 @@ const baseBtnStyles =
   "inline-flex min-h-12 items-center justify-center rounded-xl px-4 text-base font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50";
 
 const buttonVariants = {
-  primary: "bg-emerald-600 text-white hover:bg-emerald-700",
-  secondary: "bg-stone-100 text-stone-900 hover:bg-stone-200",
-  ghost: "bg-transparent text-stone-700 hover:bg-stone-100",
-  danger: "bg-red-600 text-white hover:bg-red-700",
+  primary:
+    "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500",
+  secondary:
+    "bg-stone-100 text-stone-900 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-100 dark:hover:bg-stone-700",
+  ghost:
+    "bg-transparent text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800",
+  danger:
+    "bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-500",
 };
 
 type ButtonVariant = keyof typeof buttonVariants;
@@ -59,7 +63,7 @@ export function Input({
 }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`min-h-12 w-full rounded-xl border border-stone-200 bg-white px-4 text-base text-stone-900 placeholder:text-stone-400 focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 ${className}`}
+      className={`min-h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-4 text-base text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 ${className}`}
       {...props}
     />
   );
@@ -75,7 +79,7 @@ export function Label({
   return (
     <label
       htmlFor={htmlFor}
-      className="mb-1.5 block text-sm font-medium text-stone-700"
+      className="mb-1.5 block text-sm font-medium text-[var(--foreground)]"
     >
       {children}
     </label>
@@ -91,7 +95,7 @@ export function Card({
 }) {
   return (
     <div
-      className={`rounded-2xl border border-stone-200 bg-white p-4 shadow-sm ${className}`}
+      className={`rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-sm ${className}`}
     >
       {children}
     </div>
@@ -110,18 +114,18 @@ export function PageShell({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto min-h-screen max-w-md bg-stone-100 px-4 py-5 pb-32">
+    <div className="mx-auto min-h-screen max-w-md bg-[var(--surface)] px-4 py-5 pb-32 transition-colors duration-200">
       {(title || subtitle || action) && (
         <header className="mb-6">
           <div className="flex items-start justify-between gap-3">
             <div>
               {title && (
-                <h1 className="text-2xl font-bold tracking-tight text-stone-900">
+                <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">
                   {title}
                 </h1>
               )}
               {subtitle && (
-                <p className="mt-1 text-sm text-stone-600">{subtitle}</p>
+                <p className="mt-1 text-sm text-[var(--muted)]">{subtitle}</p>
               )}
             </div>
             {action}

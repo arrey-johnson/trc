@@ -84,8 +84,8 @@ export function NotificationsList({
   if (items.length === 0) {
     return (
       <Card className="p-6 text-center">
-        <p className="text-stone-600">No notifications yet.</p>
-        <p className="mt-2 text-sm text-stone-500">
+        <p className="text-[var(--muted)]">No notifications yet.</p>
+        <p className="mt-2 text-sm text-[var(--muted)]">
           Reminders and forum posts will show up here.
         </p>
         <Link
@@ -122,20 +122,20 @@ export function NotificationsList({
               onClick={() => markRead(n.id, n.url)}
               className={`w-full rounded-2xl border p-4 text-left transition active:scale-[0.99] ${
                 n.read_at
-                  ? "border-stone-200 bg-white"
-                  : "border-emerald-200 bg-emerald-50/50"
+                  ? "border-[var(--border)] bg-[var(--card)]"
+                  : "border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-950/40"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
-                <span className="text-xs font-medium uppercase tracking-wide text-stone-500">
+                <span className="text-xs font-medium uppercase tracking-wide text-[var(--muted)]">
                   {typeLabel(n.type)}
                 </span>
-                <span className="shrink-0 text-xs text-stone-400">
+                <span className="shrink-0 text-xs text-[var(--muted)]">
                   {formatWhen(n.created_at)}
                 </span>
               </div>
-              <p className="mt-1 font-semibold text-stone-900">{n.title}</p>
-              <p className="mt-1 text-sm text-stone-600 line-clamp-2">
+              <p className="mt-1 font-semibold text-[var(--foreground)]">{n.title}</p>
+              <p className="mt-1 text-sm text-[var(--muted)] line-clamp-2">
                 {n.body}
               </p>
             </button>

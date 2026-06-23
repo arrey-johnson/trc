@@ -17,9 +17,9 @@ export function CheckinItemRow({
   const showReason = item.wasDone === false;
 
   return (
-    <li className="rounded-2xl border border-stone-200 bg-white p-4">
+    <li className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4">
       <div className="flex items-center justify-between gap-3">
-        <p className="flex-1 text-base font-medium text-stone-900">{item.label}</p>
+        <p className="flex-1 text-base font-medium text-[var(--foreground)]">{item.label}</p>
         <div className="flex gap-2">
           <button
             type="button"
@@ -27,8 +27,8 @@ export function CheckinItemRow({
             onClick={() => onAnswer(true)}
             className={`flex h-14 w-14 items-center justify-center rounded-xl text-2xl transition ${
               item.wasDone === true
-                ? "bg-emerald-100 ring-2 ring-emerald-500"
-                : "bg-stone-100 hover:bg-emerald-50"
+                ? "bg-emerald-100 ring-2 ring-emerald-500 dark:bg-emerald-900/40"
+                : "bg-[var(--elevated)] hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
             }`}
           >
             ✅
@@ -39,8 +39,8 @@ export function CheckinItemRow({
             onClick={() => onAnswer(false)}
             className={`flex h-14 w-14 items-center justify-center rounded-xl text-2xl transition ${
               item.wasDone === false
-                ? "bg-red-100 ring-2 ring-red-500"
-                : "bg-stone-100 hover:bg-red-50"
+                ? "bg-red-100 ring-2 ring-red-500 dark:bg-red-900/40"
+                : "bg-[var(--elevated)] hover:bg-red-50 dark:hover:bg-red-950/30"
             }`}
           >
             ❌
@@ -49,7 +49,7 @@ export function CheckinItemRow({
       </div>
       {showReason && (
         <div className="mt-3">
-          <label className="mb-1 block text-sm text-stone-600">
+          <label className="mb-1 block text-sm text-[var(--muted)]">
             Why wasn&apos;t this done?
           </label>
           <Input

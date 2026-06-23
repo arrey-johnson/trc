@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ButtonLink, Card, PageShell } from "@/components/ui";
-import { formatPostDate, forumCategoryLabel } from "@/lib/forum";
+import { PostThread } from "@/components/forum/PostThread";
+import { PageShell } from "@/components/ui";
 import { getAuthUser, getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -17,58 +17,76 @@ export default async function ForumPostPage({ params }: ForumPostPageProps) {
   if (!profile?.onboarding_complete) redirect("/onboarding");
 
   const supabase = createClient();
+
   const { data: post } = await supabase
     .from("forum_posts")
-    .select("id, title, body, category, created_at, author_id")
+    .select(
+      "id, author_id, body, category, parent_id, like_count, reply_count, created_at"
+    )
     .eq("id", params.postId)
-    .eq("is_published", true)
+    .is("parent_id", null)
     .maybeSingle();
 
   if (!post) notFound();
 
-  const { data: author } = await supabase
-    .from("users")
-    .select("display_name")
-    .eq("id", post.author_id)
-    .maybeSingle();
+  const { data: replies } = await supabase
+    .from("forum_posts")
+    .select("id, author_id, body, category, created_at, like_count, reply_count")
+    .eq("parent_id", params.postId)
+    .order("created_at", { ascending: true });
+
+  const allIds = [post.id, ...(replies ?? []).map((r) => r.id)];
+  const authorIds = Array.from(
+    new Set([post.author_id, ...(replies ?? []).map((r) => r.author_id)])
+  );
+
+  const [{ data: authors }, { data: myLikes }] = await Promise.all([
+    supabase.from("users").select("id, display_name").in("id", authorIds),
+    supabase
+      .from("forum_post_likes")
+      .select("post_id")
+      .eq("user_id", profile.id)
+      .in("post_id", allIds),
+  ]);
+
+  const authorMap = new Map(
+    (authors ?? []).map((a) => [a.id, { display_name: a.display_name }])
+  );
+  const likedSet = new Set((myLikes ?? []).map((l) => l.post_id));
+
+  const postWithAuthor = {
+    ...post,
+    title: null,
+    is_published: true,
+    updated_at: post.created_at,
+    author: authorMap.get(post.author_id) ?? null,
+    liked_by_me: likedSet.has(post.id),
+  };
+
+  const repliesWithAuthors = (replies ?? []).map((r) => ({
+    ...r,
+    title: null,
+    parent_id: params.postId,
+    is_published: true,
+    updated_at: r.created_at,
+    author: authorMap.get(r.author_id) ?? null,
+    liked_by_me: likedSet.has(r.id),
+  }));
 
   return (
     <PageShell>
       <Link
         href="/forum"
-        className="mb-4 inline-flex text-sm font-medium text-emerald-700"
+        className="mb-4 inline-flex text-sm font-medium text-emerald-700 dark:text-emerald-400"
       >
-        ← Back to Forum
+        ← Back to feed
       </Link>
-
-      <Card className="space-y-4 p-5">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-medium text-emerald-800">
-            {forumCategoryLabel(post.category)}
-          </span>
-          <span className="text-xs text-stone-500">
-            {formatPostDate(post.created_at, profile.timezone)}
-          </span>
-        </div>
-
-        <h1 className="text-2xl font-bold leading-tight text-stone-900">
-          {post.title}
-        </h1>
-
-        <p className="text-sm text-stone-500">
-          By {author?.display_name ?? "Admin"}
-        </p>
-
-        <div className="whitespace-pre-wrap text-base leading-relaxed text-stone-800">
-          {post.body}
-        </div>
-      </Card>
-
-      <div className="mt-4">
-        <ButtonLink href="/forum" variant="secondary" className="w-full">
-          More posts
-        </ButtonLink>
-      </div>
+      <PostThread
+        post={postWithAuthor}
+        replies={repliesWithAuthors}
+        timezone={profile.timezone}
+        currentUserId={profile.id}
+      />
     </PageShell>
   );
 }

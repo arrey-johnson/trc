@@ -1,11 +1,11 @@
 {
-  "name": "Habit Tracker app",
-  "short_name": "Habit Tracker app",
-  "description": "Daily habit check-ins — log your routine, share to WhatsApp.",
+  "name": "The Reset Circle App",
+  "short_name": "Reset Circle",
+  "description": "Daily accountability check-ins for The Reset Circle — log your routine, share to WhatsApp.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fafaf9",
-  "theme_color": "#059669",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "orientation": "portrait",
   "icons": [
     {

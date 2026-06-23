@@ -1,4 +1,4 @@
-project_id = "habit-tracker-app"
+project_id = "the-reset-circle-app"
 
 [api]
 enabled = true

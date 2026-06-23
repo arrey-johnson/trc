@@ -1,7 +1,7 @@
 -- Run this entire file in Supabase Dashboard → SQL Editor → New query → Run
 -- https://supabase.com/dashboard/project/qlhjabkkpnipwkkstlsn/sql/new
 
--- Habit Tracker app — full schema
+-- The Reset Circle App — full schema
 
 create table public.users (
   id uuid primary key references auth.users (id) on delete cascade,
@@ -259,3 +259,18 @@ create policy "Users update own reminder log"
   on public.reminder_log for update
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- Migration 006: admin read push/reminder log + update members
+
+create policy "Admins read all push subscriptions"
+  on public.push_subscriptions for select
+  using (public.is_admin());
+
+create policy "Admins read all reminder log"
+  on public.reminder_log for select
+  using (public.is_admin());
+
+create policy "Admins update member roles"
+  on public.users for update
+  using (public.is_admin())
+  with check (public.is_admin());

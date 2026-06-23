@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { NotificationBell } from "@/components/NotificationBell";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { ButtonLink, Card, PageShell } from "@/components/ui";
 import { ROUTINE_LABELS } from "@/lib/constants";
 import { formatReportDate, getTodayInTimezone } from "@/lib/dates";
@@ -90,6 +91,7 @@ export default async function HomePage() {
             <p className="mt-1 text-sm text-emerald-50">{friendlyDate}</p>
           </div>
           <div className="flex shrink-0 items-center gap-1">
+            <ThemeToggle variant="header" />
             <NotificationBell initialUnread={unreadCount ?? 0} />
             <Link
               href="/settings"
@@ -107,8 +109,8 @@ export default async function HomePage() {
                 strokeLinejoin="round"
                 aria-hidden
               >
+                <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
                 <circle cx="12" cy="12" r="3" />
-                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
               </svg>
             </Link>
           </div>
@@ -144,27 +146,27 @@ export default async function HomePage() {
             <Card key={type} className="space-y-4 p-5">
               <div className="flex items-start gap-3">
                 <span
-                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-stone-100 text-2xl"
+                  className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--surface)] text-2xl"
                   aria-hidden
                 >
                   {meta.emoji}
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-lg font-semibold text-stone-900">
+                    <h2 className="text-lg font-semibold text-[var(--foreground)]">
                       {label}
                     </h2>
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                         isDone
-                          ? "bg-emerald-100 text-emerald-800"
-                          : "bg-amber-100 text-amber-800"
+                          ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
+                          : "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
                       }`}
                     >
                       {isDone ? statusLabel(checkin!.status) : "Pending"}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-stone-600">
+                  <p className="mt-1 text-sm text-[var(--muted)]">
                     {isDone
                       ? "Submitted — tap below to share with your group"
                       : "Tap each item, then share your report to WhatsApp"}
@@ -191,9 +193,11 @@ export default async function HomePage() {
       </div>
 
       {profile.whatsapp_group_role === "admin" && (
-        <p className="mt-6 text-center text-xs text-stone-500">
-          Admin dashboard coming in Phase 4
-        </p>
+        <div className="mt-6">
+          <ButtonLink href="/admin" variant="secondary" className="w-full">
+            Open admin dashboard
+          </ButtonLink>
+        </div>
       )}
     </PageShell>
   );

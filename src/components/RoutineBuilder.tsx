@@ -43,14 +43,14 @@ function DragHandle({ listeners, attributes }: {
   return (
     <button
       type="button"
-      className="flex min-h-12 min-w-11 shrink-0 touch-none cursor-grab items-center justify-center rounded-xl text-stone-400 active:cursor-grabbing active:bg-stone-100"
+      className="flex min-h-12 min-w-11 shrink-0 touch-none cursor-grab items-center justify-center rounded-xl text-[var(--muted)] active:cursor-grabbing active:bg-[var(--elevated)]"
       aria-label="Drag to reorder"
       {...attributes}
       {...listeners}
     >
       <span className="grid grid-cols-2 gap-1" aria-hidden>
         {Array.from({ length: 6 }).map((_, i) => (
-          <span key={i} className="h-1.5 w-1.5 rounded-full bg-stone-400" />
+          <span key={i} className="h-1.5 w-1.5 rounded-full bg-[var(--muted)]" />
         ))}
       </span>
     </button>
@@ -86,10 +86,10 @@ function SortableRoutineItem({
     <li
       ref={setNodeRef}
       style={style}
-      className={`flex items-center gap-2 rounded-xl border bg-white p-2 ${
+      className={`flex items-center gap-2 rounded-xl border bg-[var(--card)] p-2 ${
         isDragging
-          ? "z-10 border-emerald-400 shadow-lg ring-2 ring-emerald-200"
-          : "border-stone-200"
+          ? "z-10 border-emerald-400 shadow-lg ring-2 ring-emerald-200 dark:ring-emerald-800"
+          : "border-[var(--border)]"
       }`}
     >
       <DragHandle listeners={listeners} attributes={attributes} />
@@ -153,8 +153,8 @@ export function RoutineBuilder({ title, items, onChange }: RoutineBuilderProps) 
 
   return (
     <div className="space-y-3">
-      <h2 className="text-lg font-semibold text-stone-900">{title}</h2>
-      <p className="text-xs text-stone-500">Press and drag the handle to reorder</p>
+      <h2 className="text-lg font-semibold text-[var(--foreground)]">{title}</h2>
+      <p className="text-xs text-[var(--muted)]">Press and drag the handle to reorder</p>
 
       <DndContext
         sensors={sensors}
@@ -179,14 +179,14 @@ export function RoutineBuilder({ title, items, onChange }: RoutineBuilderProps) 
         </SortableContext>
       </DndContext>
 
-      <div className="space-y-3 rounded-xl border border-dashed border-stone-300 bg-stone-50 p-3">
+      <div className="space-y-3 rounded-xl border border-dashed border-[var(--border)] bg-[var(--elevated)] p-3">
         <Label htmlFor="new-routine-item">Add a new habit</Label>
         <Input
           id="new-routine-item"
           placeholder="e.g. Read 10 pages"
           value={newLabel}
           onChange={(e) => setNewLabel(e.target.value)}
-          className="bg-white text-left"
+          className="bg-[var(--input-bg)] text-left"
           autoComplete="off"
           onKeyDown={(e) => {
             if (e.key === "Enter") {
@@ -196,12 +196,12 @@ export function RoutineBuilder({ title, items, onChange }: RoutineBuilderProps) 
           }}
         />
         {newLabel.trim() ? (
-          <p className="text-sm text-stone-600">
+          <p className="text-sm text-[var(--muted)]">
             Adding:{" "}
-            <span className="font-medium text-stone-900">{newLabel.trim()}</span>
+            <span className="font-medium text-[var(--foreground)]">{newLabel.trim()}</span>
           </p>
         ) : (
-          <p className="text-sm text-stone-500">Type above, then tap Add</p>
+          <p className="text-sm text-[var(--muted)]">Type above, then tap Add</p>
         )}
         <Button
           type="button"

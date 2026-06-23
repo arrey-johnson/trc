@@ -97,14 +97,14 @@ export default function SignupPage() {
         subtitle="We sent a confirmation link to complete your signup."
       >
         <Card className="space-y-4">
-          <p className="text-sm text-stone-600">
+          <p className="text-sm text-[var(--muted)]">
             Open the link in your email, then come back and{" "}
             <Link href="/auth/login" className="font-medium text-emerald-700 underline">
               sign in
             </Link>
             .
           </p>
-          <p className="text-xs text-stone-500">
+          <p className="text-xs text-[var(--muted)]">
             For local testing, you can disable email confirmation in Supabase →
             Authentication → Providers → Email.
           </p>
@@ -115,7 +115,7 @@ export default function SignupPage() {
 
   return (
     <PageShell
-      title="Join Habit Tracker app"
+      title="Join The Reset Circle App"
       subtitle="Create your account to start daily check-ins."
     >
       <Card>
@@ -130,7 +130,7 @@ export default function SignupPage() {
               onChange={(e) => setDisplayName(e.target.value)}
               required
             />
-            <p className="mt-1 text-xs text-stone-500">
+            <p className="mt-1 text-xs text-[var(--muted)]">
               Shown on your WhatsApp report — use the name your group knows.
             </p>
           </div>
@@ -160,7 +160,7 @@ export default function SignupPage() {
               onChange={(e) => setWhatsapp(e.target.value)}
               required
             />
-            <p className="mt-1 text-xs text-stone-500">
+            <p className="mt-1 text-xs text-[var(--muted)]">
               Include country code. Used to identify you in group reports.
             </p>
           </div>
@@ -196,7 +196,7 @@ export default function SignupPage() {
             {loading ? "Creating account..." : "Create account"}
           </Button>
 
-          <p className="text-center text-sm text-stone-600">
+          <p className="text-center text-sm text-[var(--muted)]">
             Already have an account?{" "}
             <Link href="/auth/login" className="font-medium text-emerald-700 underline">
               Sign in
@@ -205,7 +205,7 @@ export default function SignupPage() {
           <p className="text-center">
             <button
               type="button"
-              className="text-xs text-stone-500 underline"
+              className="text-xs text-[var(--muted)] underline"
               onClick={async () => {
                 await supabase.auth.signOut();
                 router.push("/auth/login");

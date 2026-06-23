@@ -9,12 +9,12 @@ self.addEventListener("push", (event) => {
     data = { body: event.data?.text() };
   }
 
-  const title = data.title || "Habit Tracker";
+  const title = data.title || "The Reset Circle App";
   const options = {
     body: data.body || "",
     icon: "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
-    tag: data.tag || "habit-tracker",
+    tag: data.tag || "reset-circle",
     data: { url: data.url || "/" },
   };
 

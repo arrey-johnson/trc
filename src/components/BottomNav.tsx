@@ -6,10 +6,11 @@ import { usePathname } from "next/navigation";
 const NAV_ITEMS = [
   { href: "/", label: "Home", Icon: HomeIcon },
   { href: "/progress", label: "Progress", Icon: ProgressIcon },
+  { href: "/library", label: "Library", Icon: LibraryIcon },
   { href: "/forum", label: "Forum", Icon: ForumIcon },
 ] as const;
 
-const HIDDEN_PREFIXES = ["/auth", "/onboarding"];
+const HIDDEN_PREFIXES = ["/auth", "/onboarding", "/admin"];
 
 export function BottomNav() {
   const pathname = usePathname();
@@ -23,7 +24,7 @@ export function BottomNav() {
       className="pointer-events-none fixed bottom-0 left-0 right-0 z-50 px-4"
       aria-label="Main navigation"
     >
-      <div className="pointer-events-auto mx-auto mb-3 max-w-md rounded-2xl border border-stone-200/80 bg-white px-2 py-2 shadow-[0_8px_30px_rgba(0,0,0,0.08)]">
+      <div className="pointer-events-auto mx-auto mb-3 max-w-md rounded-2xl border border-[var(--border)] bg-[var(--card)] px-2 py-2 shadow-[0_8px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
         <div className="flex items-center justify-around gap-1">
           {NAV_ITEMS.map((item) => {
             const isActive =
@@ -41,7 +42,7 @@ export function BottomNav() {
                 className={`flex min-h-11 flex-1 items-center justify-center rounded-full transition-all duration-200 ${
                   isActive
                     ? "gap-2 bg-emerald-600 px-4 py-2.5 text-white shadow-sm"
-                    : "px-3 py-2.5 text-stone-400 hover:text-stone-600"
+                    : "px-3 py-2.5 text-[var(--muted)] hover:text-[var(--foreground)]"
                 }`}
               >
                 <item.Icon filled={isActive} />
@@ -122,6 +123,32 @@ function ProgressIcon({ filled }: { filled: boolean }) {
       aria-hidden
     >
       <path d="M4 20V12M10 20V4M16 20v-8M22 20V8" />
+    </svg>
+  );
+}
+
+function LibraryIcon({ filled }: { filled: boolean }) {
+  if (filled) {
+    return (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+        <path d="M5 4h6a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2V4Zm8 0h6a2 2 0 0 1 2 2v14h-6a2 2 0 0 1-2-2V4Z" />
+      </svg>
+    );
+  }
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2Z" />
     </svg>
   );
 }

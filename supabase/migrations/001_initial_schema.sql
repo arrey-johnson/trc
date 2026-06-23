@@ -1,4 +1,4 @@
--- Habit Tracker app — initial schema (Phase 1+)
+-- The Reset Circle App — initial schema (Phase 1+)
 -- Run in Supabase SQL Editor or via Supabase CLI
 
 -- Profiles linked to Supabase Auth

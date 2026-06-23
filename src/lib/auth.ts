@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { User } from "@/lib/types";
 
@@ -35,4 +36,15 @@ export async function requireAuthUser() {
   }
 
   return user;
+}
+
+export async function requireAdmin(): Promise<User> {
+  const authUser = await getAuthUser();
+  if (!authUser) redirect("/auth/login");
+
+  const profile = await getCurrentUser();
+  if (!profile?.onboarding_complete) redirect("/onboarding");
+  if (profile.whatsapp_group_role !== "admin") redirect("/");
+
+  return profile;
 }

@@ -166,7 +166,7 @@ export default function OnboardingPage() {
 
   return (
     <PageShell
-      title="Set up Habit Tracker app"
+      title="Set up The Reset Circle App"
       subtitle={`Step ${stepIndex + 1} of ${STEPS.length} — ${STEP_TITLES[step]}`}
     >
       <div className="mb-4 h-2 overflow-hidden rounded-full bg-stone-200">

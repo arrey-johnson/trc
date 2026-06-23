@@ -25,7 +25,7 @@ export function generateReport(params: {
   const total = items.length;
 
   const lines: string[] = [
-    `*HABIT TRACKER APP — ${title}*`,
+    `*THE RESET CIRCLE APP — ${title}*`,
     `👤 ${displayName} | 📅 ${formattedDate}`,
     "",
   ];

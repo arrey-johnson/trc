@@ -79,7 +79,7 @@ export default function LoginPage() {
 
   return (
     <PageShell
-      title="Habit Tracker app"
+      title="The Reset Circle App"
       subtitle="Sign in with your email and password."
     >
       <Card>
@@ -115,7 +115,7 @@ export default function LoginPage() {
             {loading ? "Signing in..." : "Sign in"}
           </Button>
 
-          <p className="text-center text-sm text-stone-600">
+          <p className="text-center text-sm text-[var(--muted)]">
             New here?{" "}
             <Link href="/auth/signup" className="font-medium text-emerald-700 underline">
               Create an account
@@ -124,7 +124,7 @@ export default function LoginPage() {
           <p className="text-center">
             <button
               type="button"
-              className="text-xs text-stone-500 underline"
+              className="text-xs text-[var(--muted)] underline"
               onClick={async () => {
                 await supabase.auth.signOut();
                 router.push("/auth/login");

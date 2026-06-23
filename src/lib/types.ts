@@ -64,9 +64,12 @@ export interface ReportItem {
 export interface ForumPost {
   id: string;
   author_id: string;
-  title: string;
+  title: string | null;
   body: string;
   category: string;
+  parent_id: string | null;
+  like_count: number;
+  reply_count: number;
   is_published: boolean;
   created_at: string;
   updated_at: string;
@@ -77,4 +80,38 @@ export interface ForumPostWithAuthor extends ForumPost {
   author: {
     display_name: string;
   } | null;
+  liked_by_me?: boolean;
+}
+
+export interface Book {
+  id: string;
+  title: string;
+  author: string;
+  description: string;
+  storage_path: string;
+  page_count: number;
+  is_active: boolean;
+  created_by: string;
+  created_at: string;
+}
+
+export interface BookAssignment {
+  id: string;
+  book_id: string;
+  user_id: string;
+  assigned_by: string;
+  assigned_at: string;
+}
+
+export interface BookReadingProgress {
+  id: string;
+  book_id: string;
+  user_id: string;
+  current_page: number;
+  last_read_at: string;
+}
+
+export interface BookWithProgress extends Book {
+  progress: BookReadingProgress | null;
+  pages_read_today?: number;
 }

@@ -108,10 +108,10 @@ export default async function ProgressPage() {
           <Card key={routine.routineId} className="space-y-4 p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold text-stone-900">
+                <h2 className="text-lg font-semibold text-[var(--foreground)]">
                   {ROUTINE_LABELS[routine.routineType]}
                 </h2>
-                <p className="mt-1 text-sm text-stone-600">
+                <p className="mt-1 text-sm text-[var(--muted)]">
                   {routine.loggedCount}/7 days logged · {routine.completeCount}{" "}
                   complete · 🔥 {routine.streak} day streak
                 </p>
@@ -127,19 +127,19 @@ export default async function ProgressPage() {
             <div className="grid grid-cols-7 gap-1.5">
               {routine.days.map((day) => (
                 <div key={day.date} className="flex flex-col items-center gap-1">
-                  <span className="text-[10px] font-medium text-stone-500">
+                  <span className="text-[10px] font-medium text-[var(--muted)]">
                     {weekdayShort(day.date, timezone)}
                   </span>
                   <div
                     title={`${day.date}: ${dayStatusLabel(day.status)}`}
                     className={`flex h-11 w-full items-center justify-center rounded-xl text-base ${
                       day.status === "complete"
-                        ? "bg-emerald-100"
+                        ? "bg-emerald-100 dark:bg-emerald-900/40"
                         : day.status === "partial"
-                          ? "bg-amber-100"
+                          ? "bg-amber-100 dark:bg-amber-900/40"
                           : day.status === "missed"
-                            ? "bg-red-100"
-                            : "bg-stone-100 text-stone-400"
+                            ? "bg-red-100 dark:bg-red-900/40"
+                            : "bg-[var(--elevated)] text-[var(--muted)]"
                     }`}
                   >
                     {dayStatusEmoji(day.status)}
@@ -153,17 +153,17 @@ export default async function ProgressPage() {
 
       {report.topMissReasons.length > 0 && (
         <Card className="mt-4 space-y-3 p-5">
-          <h2 className="font-semibold text-stone-900">
+          <h2 className="font-semibold text-[var(--foreground)]">
             What held you back this week
           </h2>
           <ul className="space-y-2">
             {report.topMissReasons.map((item) => (
               <li
                 key={item.reason}
-                className="flex items-center justify-between rounded-xl bg-stone-50 px-3 py-2 text-sm"
+                className="flex items-center justify-between rounded-xl bg-[var(--elevated)] px-3 py-2 text-sm"
               >
-                <span className="text-stone-700">{item.reason}</span>
-                <span className="font-medium text-stone-500">×{item.count}</span>
+                <span className="text-[var(--foreground)]">{item.reason}</span>
+                <span className="font-medium text-[var(--muted)]">×{item.count}</span>
               </li>
             ))}
           </ul>

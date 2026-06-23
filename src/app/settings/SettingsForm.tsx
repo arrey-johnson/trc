@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PushControls } from "@/components/PushControls";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import { useTheme } from "@/components/ThemeProvider";
 import { Button, Card, Input, Label, PageShell } from "@/components/ui";
 import { DEFAULT_TIMEZONE } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
@@ -33,6 +35,7 @@ export function SettingsForm({ profile }: { profile: User }) {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const supabase = createClient();
+  const { theme } = useTheme();
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
@@ -63,11 +66,24 @@ export function SettingsForm({ profile }: { profile: User }) {
   return (
     <PageShell title="Settings" subtitle="Reminders & notifications">
       <div className="space-y-4">
+        <Card className="space-y-4 p-4">
+          <h2 className="font-semibold text-[var(--foreground)]">Appearance</h2>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm text-[var(--muted)]">Theme</p>
+              <p className="text-sm font-medium text-[var(--foreground)]">
+                {theme === "dark" ? "Dark mode" : "Light mode"}
+              </p>
+            </div>
+            <ThemeToggle />
+          </div>
+        </Card>
+
         <PushControls />
 
         <Card className="space-y-4 p-4">
-          <h2 className="font-semibold text-stone-900">Reminder times</h2>
-          <p className="text-sm text-stone-600">
+          <h2 className="font-semibold text-[var(--foreground)]">Reminder times</h2>
+          <p className="text-sm text-[var(--muted)]">
             We send a push at these times in your timezone if you haven&apos;t
             logged yet today.
           </p>
@@ -79,7 +95,7 @@ export function SettingsForm({ profile }: { profile: User }) {
                 id="timezone"
                 value={timezone}
                 onChange={(e) => setTimezone(e.target.value)}
-                className="mt-1 w-full rounded-xl border border-stone-300 bg-white px-3 py-3 text-base"
+                className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-3 text-base text-[var(--foreground)]"
               >
                 {!TIMEZONES.includes(timezone as (typeof TIMEZONES)[number]) && (
                   <option value={timezone}>{timezone}</option>
@@ -90,7 +106,7 @@ export function SettingsForm({ profile }: { profile: User }) {
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-xs text-stone-500">
+              <p className="mt-1 text-xs text-[var(--muted)]">
                 Default: {DEFAULT_TIMEZONE.replace(/_/g, " ")}
               </p>
             </div>

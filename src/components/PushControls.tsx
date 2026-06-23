@@ -147,7 +147,7 @@ export function PushControls({
 
   const content = (
     <div className="space-y-3">
-      <p className="text-sm text-stone-600">
+      <p className="text-sm text-[var(--muted)]">
         Get morning and evening reminders with your actual routine items, plus
         forum updates — even when the app is closed.
       </p>
@@ -186,15 +186,15 @@ export function PushControls({
         </Button>
       )}
 
-      {message && <p className="text-sm text-stone-500">{message}</p>}
+      {message && <p className="text-sm text-[var(--muted)]">{message}</p>}
     </div>
   );
 
   if (variant === "inline") return content;
 
   return (
-    <div className="rounded-xl border border-stone-200 bg-white p-4">
-      <h3 className="font-semibold text-stone-900">Push notifications</h3>
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+      <h3 className="font-semibold text-[var(--foreground)]">Push notifications</h3>
       <div className="mt-2">{content}</div>
     </div>
   );
@@ -208,11 +208,11 @@ function Notice({
   variant: "inline" | "card";
 }) {
   const inner = (
-    <p className="text-sm text-stone-600">{children}</p>
+    <p className="text-sm text-[var(--muted)]">{children}</p>
   );
   if (variant === "inline") return inner;
   return (
-    <div className="rounded-xl border border-stone-200 bg-stone-50 p-4">
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--elevated)] p-4">
       {inner}
     </div>
   );

@@ -1,4 +1,4 @@
-# Habit Tracker app
+# The Reset Circle App
 
 A mobile-first PWA that replaces manual WhatsApp accountability rituals with structured check-ins — while keeping WhatsApp as the trusted "proof of accountability" layer.
 
@@ -12,7 +12,9 @@ A mobile-first PWA that replaces manual WhatsApp accountability rituals with str
 - **Push notifications** — morning/evening reminders, follow-ups, forum posts
 - In-app notification inbox (`/notifications`)
 
-**Not yet built:** history/streaks UI (Phase 3), admin dashboard (Phase 4).
+**Built:** history/streaks UI (`/progress`), admin dashboard (`/admin`, Phase 4a).
+
+**Not yet built:** broadcast notifications, admin role UI, export.
 
 ## Stack
 
@@ -33,6 +35,7 @@ Default timezone: `Africa/Douala` (WAT, UTC+1).
    - `supabase/migrations/001_initial_schema.sql`
    - `supabase/migrations/004_forum_posts.sql`
    - `supabase/migrations/005_notifications.sql`
+   - `supabase/migrations/006_admin_rls.sql`
    Or run the combined `supabase/setup.sql` on a fresh project.
 5. Copy your project URL and anon key from **Settings → API**.
 

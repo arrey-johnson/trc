@@ -2,7 +2,7 @@ import { ROUTINE_LABELS } from "@/lib/constants";
 import { getTodayInTimezone } from "@/lib/dates";
 import type { NotificationType, PushPayload } from "@/lib/notifications/types";
 import { sendWebPush, isPushConfigured } from "@/lib/push/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient, isAdminClientConfigured } from "@/lib/supabase/admin";
 import type { RoutineType } from "@/lib/types";
 
 // Hobby plan: Vercel allows one cron run per day. We batch-send all reminders
@@ -278,12 +278,16 @@ export async function processRoutineReminders(): Promise<{
 }
 
 export async function processForumNotifications(): Promise<number> {
+  if (!isAdminClientConfigured()) {
+    return 0;
+  }
+
   const admin = createAdminClient();
 
   const { data: posts } = await admin
     .from("forum_posts")
-    .select("id, title, body")
-    .eq("is_published", true)
+    .select("id, body")
+    .is("parent_id", null)
     .is("notified_at", null);
 
   if (!posts?.length) return 0;
@@ -301,7 +305,7 @@ export async function processForumNotifications(): Promise<number> {
 
     for (const user of users ?? []) {
       await deliverToUser(user.id, "forum_post", {
-        title: `New forum post: ${post.title}`,
+        title: `New post from the circle`,
         body: preview,
         url: `/forum/${post.id}`,
         tag: `forum-${post.id}`,
