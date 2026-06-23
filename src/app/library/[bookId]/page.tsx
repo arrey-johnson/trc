@@ -16,15 +16,6 @@ export default async function BookReadPage({ params }: BookPageProps) {
 
   const supabase = createClient();
 
-  const { data: assignment } = await supabase
-    .from("book_assignments")
-    .select("id")
-    .eq("book_id", params.bookId)
-    .eq("user_id", profile.id)
-    .maybeSingle();
-
-  if (!assignment) notFound();
-
   const { data: book } = await supabase
     .from("books")
     .select("id, title, page_count")

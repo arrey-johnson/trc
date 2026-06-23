@@ -3,6 +3,9 @@ import "server-only";
 import { revalidatePath } from "next/cache";
 import type { User } from "@/lib/types";
 import { getPdfPageCount } from "@/lib/pdf-page-count";
+import {
+  assignBookToAllMembers,
+} from "@/lib/admin/book-assignments";
 import { isAdminClientConfigured, createAdminClient } from "@/lib/supabase/admin";
 
 export type UploadBookResult =
@@ -119,19 +122,17 @@ export async function processBookUpload(
   }
 
   if (assignAll) {
-    const { data: members } = await adminClient
-      .from("users")
-      .select("id")
-      .eq("onboarding_complete", true)
-      .neq("whatsapp_group_role", "admin");
+    const { assigned, error: assignError } = await assignBookToAllMembers(
+      adminClient,
+      book.id,
+      admin.id
+    );
 
-    if (members?.length) {
-      await adminClient.from("book_assignments").insert(
-        members.map((m) => ({
-          book_id: book.id,
-          user_id: m.id,
-          assigned_by: admin.id,
-        }))
+    if (assignError) {
+      console.error("Book uploaded but assignment failed:", assignError);
+    } else if (assigned === 0) {
+      console.warn(
+        "Book uploaded with assign-all enabled but no onboarded members exist yet."
       );
     }
   }

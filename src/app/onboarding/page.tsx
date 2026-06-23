@@ -16,6 +16,7 @@ import {
   ROUTINE_LABELS,
 } from "@/lib/constants";
 import { friendlyDbError } from "@/lib/db-errors";
+import { syncLibraryForCurrentMember } from "@/app/library/actions";
 import { createClient } from "@/lib/supabase/client";
 
 const STEPS = ["morning", "evening", "reminders"] as const;
@@ -144,6 +145,8 @@ export default function OnboardingPage() {
         return;
       }
     }
+
+    await syncLibraryForCurrentMember();
 
     router.push("/");
     router.refresh();

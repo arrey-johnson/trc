@@ -15,25 +15,11 @@ export async function GET(
   }
 
   const supabase = createClient();
-  const isAdmin = profile.whatsapp_group_role === "admin";
-
-  if (!isAdmin) {
-    const { data: assignment } = await supabase
-      .from("book_assignments")
-      .select("id")
-      .eq("book_id", params.bookId)
-      .eq("user_id", profile.id)
-      .maybeSingle();
-
-    if (!assignment) {
-      return NextResponse.json({ error: "Not assigned" }, { status: 403 });
-    }
-  }
-
   const { data: book } = await supabase
     .from("books")
     .select("storage_path")
     .eq("id", params.bookId)
+    .eq("is_active", true)
     .maybeSingle();
 
   if (!book) {

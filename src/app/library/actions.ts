@@ -4,7 +4,11 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { todayForUser } from "@/lib/books";
 import { getCurrentUser } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  assignAllActiveBooksToMember,
+  assignBookToAllMembers,
+} from "@/lib/admin/book-assignments";
+import { createAdminClient, isAdminClientConfigured } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function assignBookToUser(bookId: string, userId: string) {
@@ -44,6 +48,55 @@ export async function unassignBookFromUser(bookId: string, userId: string) {
   return { error: null };
 }
 
+export async function assignBookToAllOnboardedMembers(bookId: string) {
+  const admin = await requireAdmin();
+  const adminClient = createAdminClient();
+
+  const { assigned, error } = await assignBookToAllMembers(
+    adminClient,
+    bookId,
+    admin.id
+  );
+
+  if (error) return { error, assigned: 0 };
+
+  revalidatePath(`/admin/library/${bookId}`);
+  revalidatePath("/library");
+  return { error: null, assigned };
+}
+
+/** Called after onboarding so members see books uploaded before they joined. */
+export async function syncLibraryForCurrentMember() {
+  const profile = await getCurrentUser();
+  if (!profile?.onboarding_complete || profile.whatsapp_group_role !== "member") {
+    return { error: null };
+  }
+
+  if (!isAdminClientConfigured()) {
+    return { error: null };
+  }
+
+  const adminClient = createAdminClient();
+  const { data: adminRow } = await adminClient
+    .from("users")
+    .select("id")
+    .eq("whatsapp_group_role", "admin")
+    .limit(1)
+    .maybeSingle();
+
+  const assignedBy = adminRow?.id ?? profile.id;
+  const { error } = await assignAllActiveBooksToMember(
+    adminClient,
+    profile.id,
+    assignedBy
+  );
+
+  if (error) return { error };
+
+  revalidatePath("/library");
+  return { error: null };
+}
+
 export async function saveReadingProgress(bookId: string, currentPage: number) {
   const profile = await getCurrentUser();
   if (!profile?.onboarding_complete) {
@@ -52,19 +105,11 @@ export async function saveReadingProgress(bookId: string, currentPage: number) {
 
   const supabase = createClient();
 
-  const { data: assignment } = await supabase
-    .from("book_assignments")
-    .select("id")
-    .eq("book_id", bookId)
-    .eq("user_id", profile.id)
-    .maybeSingle();
-
-  if (!assignment) return { error: "Book not assigned to you." };
-
   const { data: book } = await supabase
     .from("books")
     .select("page_count")
     .eq("id", bookId)
+    .eq("is_active", true)
     .maybeSingle();
 
   if (!book) return { error: "Book not found." };

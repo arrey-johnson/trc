@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { assignBookToUser, unassignBookFromUser } from "@/app/library/actions";
 import { Button } from "@/components/ui";
@@ -15,14 +16,17 @@ export function MemberAssignToggle({
   displayName: string;
   assigned: boolean;
 }) {
+  const router = useRouter();
   const [pending, startTransition] = useTransition();
 
   function toggle() {
     startTransition(async () => {
-      if (assigned) {
-        await unassignBookFromUser(bookId, userId);
-      } else {
-        await assignBookToUser(bookId, userId);
+      const result = assigned
+        ? await unassignBookFromUser(bookId, userId)
+        : await assignBookToUser(bookId, userId);
+
+      if (!result.error) {
+        router.refresh();
       }
     });
   }

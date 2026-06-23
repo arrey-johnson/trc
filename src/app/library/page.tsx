@@ -13,16 +13,14 @@ export default async function LibraryPage() {
   if (!profile?.onboarding_complete) redirect("/onboarding");
 
   const supabase = createClient();
-  const today = todayForUser(profile.timezone);
 
-  const { data: assignments } = await supabase
-    .from("book_assignments")
-    .select("book_id")
-    .eq("user_id", profile.id);
+  const { data: books } = await supabase
+    .from("books")
+    .select("*")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
 
-  const bookIds = (assignments ?? []).map((a) => a.book_id);
-
-  if (!bookIds.length) {
+  if (!books?.length) {
     return (
       <PageShell title="Library" subtitle="Books shared with you">
         <Card className="space-y-3 p-6 text-center">
@@ -31,19 +29,15 @@ export default async function LibraryPage() {
           </p>
           <p className="font-medium text-[var(--foreground)]">No books yet</p>
           <p className="text-sm text-[var(--muted)]">
-            Your admin will assign books for the group to read together.
+            Your admin will add books for the group to read together.
           </p>
         </Card>
       </PageShell>
     );
   }
 
-  const { data: books } = await supabase
-    .from("books")
-    .select("*")
-    .in("id", bookIds)
-    .eq("is_active", true)
-    .order("created_at", { ascending: false });
+  const today = todayForUser(profile.timezone);
+  const bookIds = books.map((book) => book.id);
 
   const { data: progressList } = await supabase
     .from("book_reading_progress")

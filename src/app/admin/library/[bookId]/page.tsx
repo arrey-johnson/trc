@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MemberAssignToggle } from "@/components/admin/MemberAssignToggle";
+import { AssignAllMembersButton } from "@/components/admin/AssignAllMembersButton";
 import { Card } from "@/components/ui";
 import { isActiveReader, readingPercent, todayForUser } from "@/lib/books";
 import { requireAdmin } from "@/lib/auth";
@@ -29,7 +30,7 @@ export default async function AdminBookDetailPage({ params }: AdminBookPageProps
         .from("users")
         .select("id, display_name")
         .eq("onboarding_complete", true)
-        .neq("whatsapp_group_role", "admin")
+        .eq("whatsapp_group_role", "member")
         .order("display_name"),
       supabase
         .from("book_assignments")
@@ -114,6 +115,10 @@ export default async function AdminBookDetailPage({ params }: AdminBookPageProps
 
       <Card className="space-y-3 p-5">
         <h2 className="font-semibold text-[var(--foreground)]">Assign members</h2>
+        <AssignAllMembersButton
+          bookId={book.id}
+          memberCount={(members ?? []).length}
+        />
         <div className="space-y-2">
           {(members ?? []).length === 0 ? (
             <p className="text-sm text-[var(--muted)]">
