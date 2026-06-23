@@ -10,7 +10,8 @@
     "preview": "npm run build && next start",
     "start": "next start",
     "lint": "next lint",
-    "generate-vapid": "node scripts/generate-vapid.mjs"
+    "generate-vapid": "node scripts/generate-vapid.mjs",
+    "verify-push": "node scripts/verify-push-config.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

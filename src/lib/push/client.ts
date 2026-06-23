@@ -20,6 +20,24 @@ export function isPushSupported(): boolean {
   );
 }
 
+export function isIosDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /iPad|iPhone|iPod/.test(navigator.userAgent);
+}
+
+export function isStandalonePwa(): boolean {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    (navigator as Navigator & { standalone?: boolean }).standalone === true
+  );
+}
+
+/** iOS only supports Web Push from a home-screen installed PWA. */
+export function needsIosInstallForPush(): boolean {
+  return isIosDevice() && !isStandalonePwa();
+}
+
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!isPushSupported()) return null;
 
@@ -93,6 +111,34 @@ export async function subscribeToPush(
   }
 
   return { ok: true };
+}
+
+/** Re-save an existing browser subscription after app updates or VAPID rotation. */
+export async function syncPushSubscription(
+  userId: string,
+  saveSubscription: (sub: {
+    user_id: string;
+    subscription_json: PushSubscriptionJSON;
+    endpoint: string;
+  }) => Promise<{ error: Error | null }>
+): Promise<void> {
+  if (!isPushSupported() || Notification.permission !== "granted") return;
+  if (!process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) return;
+
+  const reg = await registerServiceWorker();
+  if (!reg) return;
+
+  const subscription = await reg.pushManager.getSubscription();
+  if (!subscription) return;
+
+  const json = subscription.toJSON() as PushSubscriptionJSON;
+  if (!json.endpoint || !json.keys?.p256dh || !json.keys?.auth) return;
+
+  await saveSubscription({
+    user_id: userId,
+    subscription_json: json,
+    endpoint: json.endpoint,
+  });
 }
 
 export async function unsubscribeFromPush(

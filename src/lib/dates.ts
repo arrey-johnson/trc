@@ -7,6 +7,17 @@ export function getTodayInTimezone(timezone = DEFAULT_TIMEZONE): string {
   );
 }
 
+/** Returns a calendar date N days before today in the given timezone. */
+export function getDaysAgoInTimezone(
+  timezone: string,
+  daysAgo: number
+): string {
+  const today = getTodayInTimezone(timezone);
+  const [year, month, day] = today.split("-").map(Number);
+  const anchor = new Date(Date.UTC(year, month - 1, day - daysAgo, 12, 0, 0));
+  return new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(anchor);
+}
+
 /** Formats a date string for WhatsApp reports, e.g. "Mon, June 22". */
 export function formatReportDate(
   dateStr: string,

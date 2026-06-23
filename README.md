@@ -50,18 +50,34 @@ npm run generate-vapid   # prints VAPID + CRON_SECRET to paste into .env.local
 ### Push notifications (local + production)
 
 1. Run migration `005_notifications.sql` in Supabase SQL Editor.
-2. Add env vars from `.env.example` (use `npm run generate-vapid` for VAPID + cron secret).
-3. Get **service role key** from Supabase → Settings → API (server-only, never expose to client).
-4. On a phone: open the app → **Add to Home Screen** → Settings → **Enable notifications**.
-5. Cron runs **once daily** at 21:00 UTC (`vercel.json`) — Vercel Hobby limit. Each run sends any reminders whose local time has already passed that day. Upgrade to Pro for more frequent cron.
+2. Generate keys: `npm run generate-vapid` — paste output into `.env.local` and Vercel env vars.
+3. Add **service role key** from Supabase → Settings → API (`SUPABASE_SERVICE_ROLE_KEY`, server-only).
+4. Verify: `npm run verify-push` (loads from `.env.local` if you use a dotenv loader, or export vars first).
+5. On a phone: **Add to Home Screen** → open from home screen → Settings → **Enable notifications**.
 
-Test locally:
+**Vercel production (required for server-side push):**
+
+| Variable | Notes |
+|----------|--------|
+| `NEXT_PUBLIC_VAPID_PUBLIC_KEY` | From `npm run generate-vapid` |
+| `VAPID_PRIVATE_KEY` | Server-only, never expose to client |
+| `VAPID_SUBJECT` | `mailto:you@yourdomain.com` |
+| `CRON_SECRET` | Same value Vercel sends as `Authorization: Bearer …` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Sends push + writes notification rows |
+
+Cron hits `/api/cron/reminders` on the schedule in `vercel.json` (hourly on Pro; **once per day on Hobby**). Each run sends reminders whose local time has passed, including catch-up for yesterday if the previous run was too early.
+
+Test production cron after deploy:
 
 ```bash
-curl -H "Authorization: Bearer YOUR_CRON_SECRET" http://localhost:3000/api/cron/reminders
+curl -H "Authorization: Bearer YOUR_CRON_SECRET" https://your-app.vercel.app/api/cron/reminders
 ```
 
-**iOS:** Web Push requires iOS 16.4+ and the app installed to the home screen (not just Safari).
+Expect `{ "ok": true, "config": { "pushReady": true, ... } }` — not a redirect to login.
+
+**iOS:** Web Push requires iOS 16.4+ and the app **installed to the home screen** (Safari tab alone will not work).
+
+**Hobby plan tip:** Vercel only triggers cron once daily. For hourly reminders globally, upgrade to Pro or ping the same endpoint hourly from an external cron service using your `CRON_SECRET`.
 
 ### 3. Run locally
 

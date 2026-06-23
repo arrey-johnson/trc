@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   getNotificationPermission,
   isPushSupported,
+  needsIosInstallForPush,
   registerServiceWorker,
   subscribeToPush,
   unsubscribeFromPush,
@@ -145,12 +146,29 @@ export function PushControls({
     );
   }
 
+  const iosInstallRequired = needsIosInstallForPush();
+  const pushConfigured = Boolean(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY);
+
   const content = (
     <div className="space-y-3">
       <p className="text-sm text-[var(--muted)]">
         Get morning and evening reminders with your actual routine items, plus
         forum updates — even when the app is closed.
       </p>
+
+      {!pushConfigured && (
+        <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+          Push is not configured on the server yet. Ask your admin to add VAPID
+          keys to the deployment environment.
+        </p>
+      )}
+
+      {iosInstallRequired && (
+        <p className="rounded-xl bg-sky-50 p-3 text-sm text-sky-900 dark:bg-sky-950/40 dark:text-sky-200">
+          On iPhone: tap Share → <strong>Add to Home Screen</strong>, open the
+          app from your home screen, then enable notifications here.
+        </p>
+      )}
 
       {status === "denied" && (
         <p className="rounded-xl bg-amber-50 p-3 text-sm text-amber-900">
@@ -179,7 +197,7 @@ export function PushControls({
         <Button
           type="button"
           onClick={handleEnable}
-          disabled={busy || status === "denied"}
+          disabled={busy || status === "denied" || !pushConfigured || iosInstallRequired}
           className="sm:w-auto"
         >
           {busy ? "Enabling..." : "Enable notifications"}

@@ -3,6 +3,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { ChunkErrorHandler } from "@/components/ChunkErrorHandler";
 import { NavigationProgress } from "@/components/NavigationProgress";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
+import { PushSubscriptionSync } from "@/components/PushSubscriptionSync";
 import { SplashDismiss } from "@/components/SplashDismiss";
 import { SplashStartupLinks } from "@/components/SplashStartupLinks";
 import { ThemeProvider } from "@/components/ThemeProvider";
@@ -90,6 +91,7 @@ export default function RootLayout({
           <SplashDismiss />
           <ChunkErrorHandler />
           <ServiceWorkerRegistration />
+          <PushSubscriptionSync />
           <NavigationProgress />
           {children}
           <BottomNav />

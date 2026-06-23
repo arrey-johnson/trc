@@ -1,5 +1,5 @@
 import { ROUTINE_LABELS } from "@/lib/constants";
-import { getTodayInTimezone } from "@/lib/dates";
+import { getDaysAgoInTimezone, getTodayInTimezone } from "@/lib/dates";
 import type { NotificationType, PushPayload } from "@/lib/notifications/types";
 import { sendWebPush, isPushConfigured } from "@/lib/push/server";
 import { createAdminClient, isAdminClientConfigured } from "@/lib/supabase/admin";
@@ -209,10 +209,76 @@ async function shouldSendEscalation(
   return hoursSince >= ESCALATION_HOURS;
 }
 
+async function processUserRoutineReminders(
+  user: {
+    id: string;
+    timezone: string;
+    morning_reminder_time: string;
+    evening_reminder_time: string;
+  },
+  date: string,
+  options: { isToday: boolean; nowLocal: string }
+): Promise<{ firstSent: number; escalationSent: number }> {
+  let firstSent = 0;
+  let escalationSent = 0;
+
+  const routines: Array<{ type: RoutineType; reminderTime: string }> = [
+    { type: "morning", reminderTime: user.morning_reminder_time },
+    { type: "evening", reminderTime: user.evening_reminder_time },
+  ];
+
+  for (const { type, reminderTime } of routines) {
+    if (await hasCheckinToday(user.id, type, date)) continue;
+
+    const pastDue = options.isToday
+      ? isReminderPastDue(reminderTime, options.nowLocal)
+      : true;
+
+    if (
+      pastDue &&
+      !(await reminderAlreadySent(user.id, date, "first", type))
+    ) {
+      const labels = await getRoutineItemLabels(user.id, type);
+      const label = ROUTINE_LABELS[type];
+      const catchUp = options.isToday ? "" : " (catch-up)";
+      await deliverToUser(user.id, `${type}_reminder`, {
+        title: `${label} check-in${catchUp}`,
+        body: buildRoutineBody(labels),
+        url: `/checkin/${type}`,
+        tag: `${type}-reminder-${date}`,
+      });
+      await logReminder(user.id, date, "first", type);
+      firstSent++;
+      continue;
+    }
+
+    if (
+      !(await reminderAlreadySent(user.id, date, "escalation", type)) &&
+      (await shouldSendEscalation(user.id, date, type))
+    ) {
+      const label = ROUTINE_LABELS[type];
+      await deliverToUser(user.id, "escalation", {
+        title: `Still need your ${label.toLowerCase()}?`,
+        body: "You haven't logged today's check-in yet. Tap to finish in under a minute.",
+        url: `/checkin/${type}`,
+        tag: `${type}-escalation-${date}`,
+      });
+      await logReminder(user.id, date, "escalation", type);
+      escalationSent++;
+    }
+  }
+
+  return { firstSent, escalationSent };
+}
+
 export async function processRoutineReminders(): Promise<{
   firstSent: number;
   escalationSent: number;
 }> {
+  if (!isAdminClientConfigured()) {
+    return { firstSent: 0, escalationSent: 0 };
+  }
+
   const admin = createAdminClient();
 
   const { data: users } = await admin
@@ -228,51 +294,20 @@ export async function processRoutineReminders(): Promise<{
 
   for (const user of users ?? []) {
     const today = getTodayInTimezone(user.timezone);
+    const yesterday = getDaysAgoInTimezone(user.timezone, 1);
     const nowLocal = getLocalHHMM(user.timezone);
 
-    const routines: Array<{
-      type: RoutineType;
-      reminderTime: string;
-    }> = [
-      { type: "morning", reminderTime: user.morning_reminder_time },
-      { type: "evening", reminderTime: user.evening_reminder_time },
-    ];
+    const yesterdayResult = await processUserRoutineReminders(user, yesterday, {
+      isToday: false,
+      nowLocal,
+    });
+    const todayResult = await processUserRoutineReminders(user, today, {
+      isToday: true,
+      nowLocal,
+    });
 
-    for (const { type, reminderTime } of routines) {
-      if (await hasCheckinToday(user.id, type, today)) continue;
-
-      if (
-        isReminderPastDue(reminderTime, nowLocal) &&
-        !(await reminderAlreadySent(user.id, today, "first", type))
-      ) {
-        const labels = await getRoutineItemLabels(user.id, type);
-        const label = ROUTINE_LABELS[type];
-        await deliverToUser(user.id, `${type}_reminder`, {
-          title: `${label} check-in`,
-          body: buildRoutineBody(labels),
-          url: `/checkin/${type}`,
-          tag: `${type}-reminder-${today}`,
-        });
-        await logReminder(user.id, today, "first", type);
-        firstSent++;
-        continue;
-      }
-
-      if (
-        !(await reminderAlreadySent(user.id, today, "escalation", type)) &&
-        (await shouldSendEscalation(user.id, today, type))
-      ) {
-        const label = ROUTINE_LABELS[type];
-        await deliverToUser(user.id, "escalation", {
-          title: `Still need your ${label.toLowerCase()}?`,
-          body: "You haven't logged today's check-in yet. Tap to finish in under a minute.",
-          url: `/checkin/${type}`,
-          tag: `${type}-escalation-${today}`,
-        });
-        await logReminder(user.id, today, "escalation", type);
-        escalationSent++;
-      }
-    }
+    firstSent += yesterdayResult.firstSent + todayResult.firstSent;
+    escalationSent += yesterdayResult.escalationSent + todayResult.escalationSent;
   }
 
   return { firstSent, escalationSent };
