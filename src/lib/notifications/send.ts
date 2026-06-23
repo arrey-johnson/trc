@@ -358,6 +358,65 @@ export async function processForumNotifications(): Promise<number> {
   return sent;
 }
 
+export async function sendTestNotificationToUser(userId: string): Promise<{
+  pushSent: number;
+  pushFailed: number;
+  subscriptionCount: number;
+  error: string | null;
+}> {
+  if (!isAdminClientConfigured()) {
+    return {
+      pushSent: 0,
+      pushFailed: 0,
+      subscriptionCount: 0,
+      error: "Push is not configured on this server.",
+    };
+  }
+
+  if (!isPushConfigured()) {
+    return {
+      pushSent: 0,
+      pushFailed: 0,
+      subscriptionCount: 0,
+      error: "Push is not configured on this server.",
+    };
+  }
+
+  const admin = createAdminClient();
+  const { data: subs } = await admin
+    .from("push_subscriptions")
+    .select("id")
+    .eq("user_id", userId);
+
+  const subscriptionCount = subs?.length ?? 0;
+  if (subscriptionCount === 0) {
+    return {
+      pushSent: 0,
+      pushFailed: 0,
+      subscriptionCount: 0,
+      error: "No push subscription found. Enable notifications on this device first.",
+    };
+  }
+
+  const { pushSent, pushFailed } = await deliverToUser(userId, "general", {
+    title: "The Reset Circle",
+    body: "Test notification — you're all set to receive reminders.",
+    url: "/settings",
+    tag: "test-notification",
+  });
+
+  if (pushSent === 0) {
+    return {
+      pushSent,
+      pushFailed,
+      subscriptionCount,
+      error: "Could not deliver push to this device. Try turning notifications off and on again.",
+    };
+  }
+
+  return { pushSent, pushFailed, subscriptionCount, error: null };
+}
+
 export async function markRemindersActioned(
   userId: string,
   routineType: RoutineType,

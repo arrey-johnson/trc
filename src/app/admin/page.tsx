@@ -1,4 +1,5 @@
 import { MemberRow } from "@/components/admin/MemberRow";
+import { AdminTestNotificationsButton } from "@/components/admin/AdminTestNotificationsButton";
 import { CommitmentBadge } from "@/components/admin/CommitmentBadge";
 import { Card } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
@@ -78,6 +79,17 @@ export default async function AdminOverviewPage() {
           </p>
         </Card>
       </div>
+
+      <Card className="mb-4 space-y-3 p-4">
+        <h2 className="font-semibold text-[var(--foreground)]">
+          Push notifications
+        </h2>
+        <p className="text-sm text-[var(--muted)]">
+          Send a test notification to every member who has notifications
+          enabled on at least one device.
+        </p>
+        <AdminTestNotificationsButton />
+      </Card>
 
       <Card className="mb-4 space-y-3 p-4">
         <h2 className="font-semibold text-[var(--foreground)]">

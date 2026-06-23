@@ -13,6 +13,7 @@ import {
 } from "@/lib/push/client";
 import { Button } from "@/components/ui";
 import { savePushSubscription } from "@/lib/push/save-subscription";
+import { sendTestNotification } from "@/app/notifications/actions";
 
 type Status = "idle" | "loading" | "enabled" | "denied" | "unsupported";
 
@@ -30,6 +31,7 @@ export function PushControls({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [pushConfigured, setPushConfigured] = useState<boolean | null>(null);
+  const [testing, setTesting] = useState(false);
   const supabase = createClient();
 
   useEffect(() => {
@@ -111,6 +113,23 @@ export function PushControls({
     setBusy(false);
   }
 
+  async function handleTestNotification() {
+    setTesting(true);
+    setMessage(null);
+
+    const result = await sendTestNotification();
+
+    if (result.error) {
+      setMessage(result.error);
+    } else {
+      setMessage(
+        "Test sent. Check your phone — you should see a notification in a few seconds."
+      );
+    }
+
+    setTesting(false);
+  }
+
   async function handleDisable() {
     setBusy(true);
     setMessage(null);
@@ -181,19 +200,30 @@ export function PushControls({
       )}
 
       {status === "enabled" ? (
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <span className="inline-flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
-            Notifications on
-          </span>
+        <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <span className="inline-flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm font-medium text-emerald-800">
+              <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden />
+              Notifications on
+            </span>
+            <Button
+              type="button"
+              variant="secondary"
+              className="sm:w-auto"
+              onClick={handleDisable}
+              disabled={busy || testing}
+            >
+              Turn off
+            </Button>
+          </div>
           <Button
             type="button"
             variant="secondary"
             className="sm:w-auto"
-            onClick={handleDisable}
-            disabled={busy}
+            onClick={handleTestNotification}
+            disabled={busy || testing}
           >
-            Turn off
+            {testing ? "Sending test…" : "Send test notification"}
           </Button>
         </div>
       ) : (
