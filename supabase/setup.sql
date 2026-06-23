@@ -252,8 +252,7 @@ alter table public.push_subscriptions
   add column if not exists endpoint text;
 
 create unique index if not exists idx_push_subscriptions_user_endpoint
-  on public.push_subscriptions (user_id, endpoint)
-  where endpoint is not null;
+  on public.push_subscriptions (user_id, endpoint);
 
 create policy "Users update own reminder log"
   on public.reminder_log for update

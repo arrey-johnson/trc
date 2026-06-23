@@ -12,6 +12,7 @@ import {
   unsubscribeFromPush,
 } from "@/lib/push/client";
 import { Button } from "@/components/ui";
+import { savePushSubscription } from "@/lib/push/save-subscription";
 
 type Status = "idle" | "loading" | "enabled" | "denied" | "unsupported";
 
@@ -90,17 +91,13 @@ export function PushControls({
       return;
     }
 
-    const result = await subscribeToPush(user.id, async (sub) => {
-      const { error } = await supabase.from("push_subscriptions").upsert(
-        {
-          user_id: sub.user_id,
-          subscription_json: sub.subscription_json,
-          endpoint: sub.endpoint,
-        },
-        { onConflict: "user_id,endpoint" }
-      );
-      return { error: error ? new Error(error.message) : null };
-    });
+    const result = await subscribeToPush(user.id, async (sub) =>
+      savePushSubscription(supabase, {
+        user_id: sub.user_id,
+        subscription_json: sub.subscription_json,
+        endpoint: sub.endpoint,
+      })
+    );
 
     if (result.ok) {
       setStatus("enabled");
