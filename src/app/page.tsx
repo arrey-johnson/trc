@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { NotificationBell } from "@/components/NotificationBell";
+import { UserAvatar } from "@/components/profile/UserAvatar";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ButtonLink, Card, PageShell } from "@/components/ui";
 import { ROUTINE_LABELS } from "@/lib/constants";
 import { formatReportDate, getTodayInTimezone } from "@/lib/dates";
 import { getAuthUser, getCurrentUser } from "@/lib/auth";
+import { getAvatarPublicUrl } from "@/lib/profile/avatar";
 import { createClient } from "@/lib/supabase/server";
 import type { RoutineType } from "@/lib/types";
 import { redirect } from "next/navigation";
@@ -95,6 +97,12 @@ export default async function HomePage() {
             <p className="mt-1 text-sm text-emerald-50">{friendlyDate}</p>
           </div>
           <div className="flex shrink-0 items-center gap-1">
+            <UserAvatar
+              name={profile.display_name}
+              avatarUrl={getAvatarPublicUrl(profile.avatar_url)}
+              size="md"
+              className="mr-1 ring-2 ring-white/30"
+            />
             <ThemeToggle variant="header" />
             <NotificationBell initialUnread={unreadCount ?? 0} />
             <Link

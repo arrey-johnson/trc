@@ -7,6 +7,7 @@ export interface User {
   phone_number: string;
   email: string;
   display_name: string;
+  avatar_url: string | null;
   whatsapp_group_role: WhatsappGroupRole;
   timezone: string;
   morning_reminder_time: string;
@@ -79,6 +80,7 @@ export interface ForumPost {
 export interface ForumPostWithAuthor extends ForumPost {
   author: {
     display_name: string;
+    avatar_url?: string | null;
   } | null;
   liked_by_me?: boolean;
 }

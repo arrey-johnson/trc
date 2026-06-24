@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PushControls } from "@/components/PushControls";
+import { ProfileSettingsCard } from "@/components/profile/ProfileSettingsCard";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useTheme } from "@/components/ThemeProvider";
 import { Button, Card, Input, Label, PageShell } from "@/components/ui";
@@ -74,8 +75,10 @@ export function SettingsForm({ profile }: { profile: User }) {
   }
 
   return (
-    <PageShell title="Settings" subtitle="Reminders & notifications">
+    <PageShell title="Settings" subtitle="Profile, reminders & notifications">
       <div className="space-y-4">
+        <ProfileSettingsCard profile={profile} />
+
         <Card className="space-y-4 p-4">
           <h2 className="font-semibold text-[var(--foreground)]">Appearance</h2>
           <div className="flex items-center justify-between gap-3">

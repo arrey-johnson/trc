@@ -10,6 +10,7 @@ import {
   usePostAuthorActions,
 } from "@/components/forum/PostAuthorActions";
 import { PostActionsBar } from "@/components/forum/PostActionsBar";
+import { UserAvatar } from "@/components/profile/UserAvatar";
 import { formatPostDate, forumCategoryLabel } from "@/lib/forum";
 import type { ForumPostWithAuthor } from "@/lib/types";
 
@@ -53,12 +54,12 @@ export function FeedPostCard({
   return (
     <article className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 transition active:scale-[0.99]">
       <div className="flex items-start gap-3">
-        <Link
-          href={`/forum/${post.id}`}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
-          aria-hidden
-        >
-          {(post.author?.display_name ?? "?")[0]?.toUpperCase()}
+        <Link href={`/forum/${post.id}`} className="shrink-0">
+          <UserAvatar
+            name={post.author?.display_name ?? "Member"}
+            avatarUrl={post.author?.avatar_url}
+            size="md"
+          />
         </Link>
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">

@@ -3,6 +3,7 @@ import { ComposePost } from "@/components/forum/ComposePost";
 import { FeedPostCard } from "@/components/forum/FeedPostCard";
 import { Card, PageShell } from "@/components/ui";
 import { getAuthUser, getCurrentUser } from "@/lib/auth";
+import { getAvatarPublicUrl } from "@/lib/profile/avatar";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function ForumPage() {
@@ -28,7 +29,7 @@ export default async function ForumPage() {
 
   const [{ data: authors }, { data: myLikes }] = await Promise.all([
     authorIds.length
-      ? supabase.from("users").select("id, display_name").in("id", authorIds)
+      ? supabase.from("users").select("id, display_name, avatar_url").in("id", authorIds)
       : Promise.resolve({ data: [] }),
     postIds.length
       ? supabase
@@ -40,7 +41,13 @@ export default async function ForumPage() {
   ]);
 
   const authorMap = new Map(
-    (authors ?? []).map((a) => [a.id, { display_name: a.display_name }])
+    (authors ?? []).map((a) => [
+      a.id,
+      {
+        display_name: a.display_name,
+        avatar_url: getAvatarPublicUrl(a.avatar_url),
+      },
+    ])
   );
   const likedSet = new Set((myLikes ?? []).map((l) => l.post_id));
 

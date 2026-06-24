@@ -1,13 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   RoutineBuilder,
   templateToDrafts,
   type RoutineItemDraft,
 } from "@/components/RoutineBuilder";
 import { PushControls } from "@/components/PushControls";
+import { AvatarUpload } from "@/components/profile/AvatarUpload";
 import { Button, Card, Input, Label, PageShell } from "@/components/ui";
 import {
   DEFAULT_REMINDER_TIMES,
@@ -16,14 +17,16 @@ import {
   ROUTINE_LABELS,
 } from "@/lib/constants";
 import { friendlyDbError } from "@/lib/db-errors";
+import { resolveAvatarUrl, uploadUserAvatar } from "@/lib/profile/avatar";
 import { syncRoutineItems } from "@/lib/routines/sync-items";
 import { syncLibraryForCurrentMember } from "@/app/library/actions";
 import { createClient } from "@/lib/supabase/client";
 
-const STEPS = ["morning", "evening", "reminders"] as const;
+const STEPS = ["profile", "morning", "evening", "reminders"] as const;
 type Step = (typeof STEPS)[number];
 
 const STEP_TITLES: Record<Step, string> = {
+  profile: "Your profile",
   morning: "Morning routine",
   evening: "Evening routine",
   reminders: "Reminders",
@@ -31,8 +34,11 @@ const STEP_TITLES: Record<Step, string> = {
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const supabase = createClient();
-  const [step, setStep] = useState<Step>("morning");
+  const supabase = useMemo(() => createClient(), []);
+  const [step, setStep] = useState<Step>("profile");
+  const [displayName, setDisplayName] = useState("");
+  const [avatarPath, setAvatarPath] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [morningItems, setMorningItems] = useState<RoutineItemDraft[]>(() =>
     templateToDrafts(MORNING_TEMPLATE_ITEMS)
   );
@@ -48,6 +54,36 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    async function loadProfile() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const metadataName =
+        typeof user.user_metadata?.display_name === "string"
+          ? user.user_metadata.display_name
+          : "";
+      setDisplayName(metadataName);
+
+      const { data: profile } = await supabase
+        .from("users")
+        .select("display_name, avatar_url")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (profile?.display_name) {
+        setDisplayName(profile.display_name);
+      }
+      if (profile?.avatar_url) {
+        setAvatarPath(profile.avatar_url);
+      }
+    }
+
+    loadProfile();
+  }, [supabase]);
+
   const stepIndex = STEPS.indexOf(step);
 
   function goNext() {
@@ -61,6 +97,9 @@ export default function OnboardingPage() {
   }
 
   function validateStep(): string | null {
+    if (step === "profile" && !displayName.trim()) {
+      return "Please enter your name.";
+    }
     if (step === "morning" && morningItems.filter((i) => i.label.trim()).length === 0) {
       return "Add at least one morning routine item.";
     }
@@ -84,20 +123,33 @@ export default function OnboardingPage() {
       return;
     }
 
-    const displayName =
-      typeof user.user_metadata?.display_name === "string"
-        ? user.user_metadata.display_name
-        : "";
+    const displayNameValue = displayName.trim();
     const phoneNumber =
       typeof user.user_metadata?.phone_number === "string"
         ? user.user_metadata.phone_number
         : "";
 
+    let nextAvatarPath = avatarPath;
+    if (avatarFile) {
+      const { path, error: uploadError } = await uploadUserAvatar(
+        supabase,
+        user.id,
+        avatarFile
+      );
+      if (uploadError || !path) {
+        setError(uploadError ?? "Could not upload profile photo.");
+        setLoading(false);
+        return;
+      }
+      nextAvatarPath = path;
+    }
+
     const { error: userError } = await supabase.from("users").upsert({
       id: user.id,
       email: user.email ?? "",
-      display_name: displayName,
+      display_name: displayNameValue,
       phone_number: phoneNumber,
+      avatar_url: nextAvatarPath,
       morning_reminder_time: morningReminder,
       evening_reminder_time: eveningReminder,
       onboarding_complete: true,
@@ -108,6 +160,10 @@ export default function OnboardingPage() {
       setLoading(false);
       return;
     }
+
+    await supabase.auth.updateUser({
+      data: { display_name: displayNameValue },
+    });
 
     for (const [type, items, name] of [
       ["morning", morningItems, ROUTINE_LABELS.morning],
@@ -170,6 +226,32 @@ export default function OnboardingPage() {
       </div>
 
       <Card className="space-y-4">
+        {step === "profile" && (
+          <div className="space-y-4">
+            <p className="text-sm text-[var(--muted)]">
+              Add a photo and confirm the name your circle will see on reports
+              and in the forum.
+            </p>
+            <AvatarUpload
+              name={displayName || "You"}
+              currentAvatarUrl={resolveAvatarUrl(supabase, avatarPath)}
+              onFileSelect={setAvatarFile}
+              disabled={loading}
+            />
+            <div>
+              <Label htmlFor="onboarding-display-name">Your name</Label>
+              <Input
+                id="onboarding-display-name"
+                autoComplete="name"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="e.g. Arrey J."
+                required
+              />
+            </div>
+          </div>
+        )}
+
         {step === "morning" && (
           <RoutineBuilder
             title="Build your Morning Routine"

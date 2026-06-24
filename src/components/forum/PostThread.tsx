@@ -9,6 +9,7 @@ import {
   usePostAuthorActions,
 } from "@/components/forum/PostAuthorActions";
 import { PostActionsBar } from "@/components/forum/PostActionsBar";
+import { UserAvatar } from "@/components/profile/UserAvatar";
 import { Button } from "@/components/ui";
 import {
   FORUM_MAX_CHARS,
@@ -145,9 +146,11 @@ export function PostThread({
     <div className="space-y-4">
       <article className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
-            {(post.author?.display_name ?? "?")[0]?.toUpperCase()}
-          </div>
+          <UserAvatar
+            name={post.author?.display_name ?? "Member"}
+            avatarUrl={post.author?.avatar_url}
+            size="md"
+          />
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
