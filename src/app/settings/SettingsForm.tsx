@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { PushControls } from "@/components/PushControls";
@@ -89,6 +90,20 @@ export function SettingsForm({ profile }: { profile: User }) {
         </Card>
 
         <PushControls />
+
+        <Card className="space-y-3 p-4">
+          <h2 className="font-semibold text-[var(--foreground)]">My routines</h2>
+          <p className="text-sm text-[var(--muted)]">
+            Add habits, remove ones you no longer need, or drag to change the
+            order they appear at check-in.
+          </p>
+          <Link
+            href="/routines"
+            className="inline-flex text-sm font-semibold text-emerald-700 hover:underline dark:text-emerald-400"
+          >
+            Edit morning & evening routines →
+          </Link>
+        </Card>
 
         <Card className="space-y-4 p-4">
           <h2 className="font-semibold text-[var(--foreground)]">Reminder times</h2>

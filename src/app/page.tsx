@@ -138,6 +138,15 @@ export default async function HomePage() {
         </div>
       </header>
 
+      <div className="mb-4 flex justify-end">
+        <Link
+          href="/routines"
+          className="text-sm font-medium text-emerald-700 hover:underline dark:text-emerald-400"
+        >
+          Edit routines
+        </Link>
+      </div>
+
       <div className="space-y-4">
         {routineTypes.map((type) => {
           const routine = routines?.find((r) => r.type === type);

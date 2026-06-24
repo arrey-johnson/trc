@@ -30,6 +30,7 @@ interface RoutineBuilderProps {
   title: string;
   items: RoutineItemDraft[];
   onChange: (items: RoutineItemDraft[]) => void;
+  fieldIdPrefix?: string;
 }
 
 function newId() {
@@ -110,7 +111,12 @@ function SortableRoutineItem({
   );
 }
 
-export function RoutineBuilder({ title, items, onChange }: RoutineBuilderProps) {
+export function RoutineBuilder({
+  title,
+  items,
+  onChange,
+  fieldIdPrefix = "routine",
+}: RoutineBuilderProps) {
   const [newLabel, setNewLabel] = useState("");
 
   const sensors = useSensors(
@@ -180,9 +186,9 @@ export function RoutineBuilder({ title, items, onChange }: RoutineBuilderProps) 
       </DndContext>
 
       <div className="space-y-3 rounded-xl border border-dashed border-[var(--border)] bg-[var(--elevated)] p-3">
-        <Label htmlFor="new-routine-item">Add a new habit</Label>
+        <Label htmlFor={`${fieldIdPrefix}-new-routine-item`}>Add a new habit</Label>
         <Input
-          id="new-routine-item"
+          id={`${fieldIdPrefix}-new-routine-item`}
           placeholder="e.g. Read 10 pages"
           value={newLabel}
           onChange={(e) => setNewLabel(e.target.value)}

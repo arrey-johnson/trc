@@ -16,6 +16,7 @@ import {
   ROUTINE_LABELS,
 } from "@/lib/constants";
 import { friendlyDbError } from "@/lib/db-errors";
+import { syncRoutineItems } from "@/lib/routines/sync-items";
 import { syncLibraryForCurrentMember } from "@/app/library/actions";
 import { createClient } from "@/lib/supabase/client";
 
@@ -127,20 +128,9 @@ export default function OnboardingPage() {
         return;
       }
 
-      await supabase.from("routine_items").delete().eq("routine_id", routine.id);
-
-      const activeItems = items.filter((i) => i.label.trim());
-      const { error: itemsError } = await supabase.from("routine_items").insert(
-        activeItems.map((item, index) => ({
-          routine_id: routine.id,
-          label: item.label.trim(),
-          sort_order: index,
-          is_active: true,
-        }))
-      );
-
-      if (itemsError) {
-        setError(itemsError.message);
+      const syncResult = await syncRoutineItems(supabase, routine.id, items);
+      if (syncResult.error) {
+        setError(syncResult.error);
         setLoading(false);
         return;
       }
