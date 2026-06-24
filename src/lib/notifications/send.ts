@@ -98,6 +98,74 @@ async function deliverToUser(
   return { pushSent, pushFailed };
 }
 
+export async function broadcastToOnboardedMembers(
+  payload: PushPayload
+): Promise<{
+  members: number;
+  inboxDelivered: number;
+  devicesNotified: number;
+  pushFailed: number;
+  skippedNoPush: number;
+  error: string | null;
+}> {
+  if (!isAdminClientConfigured()) {
+    return {
+      members: 0,
+      inboxDelivered: 0,
+      devicesNotified: 0,
+      pushFailed: 0,
+      skippedNoPush: 0,
+      error: "Server is not configured for notifications.",
+    };
+  }
+
+  const admin = createAdminClient();
+  const { data: members } = await admin
+    .from("users")
+    .select("id")
+    .eq("onboarding_complete", true)
+    .eq("whatsapp_group_role", "member");
+
+  let inboxDelivered = 0;
+  let devicesNotified = 0;
+  let pushFailed = 0;
+  let skippedNoPush = 0;
+
+  for (const member of members ?? []) {
+    const { data: subs } = await admin
+      .from("push_subscriptions")
+      .select("id")
+      .eq("user_id", member.id);
+
+    const hasPush = (subs?.length ?? 0) > 0;
+    const { pushSent, pushFailed: memberFailed } = await deliverToUser(
+      member.id,
+      "general",
+      payload
+    );
+
+    inboxDelivered++;
+    if (hasPush) {
+      if (pushSent > 0) {
+        devicesNotified += pushSent;
+      } else {
+        pushFailed += Math.max(memberFailed, 1);
+      }
+    } else {
+      skippedNoPush++;
+    }
+  }
+
+  return {
+    members: members?.length ?? 0,
+    inboxDelivered,
+    devicesNotified,
+    pushFailed,
+    skippedNoPush,
+    error: null,
+  };
+}
+
 async function getRoutineItemLabels(
   userId: string,
   routineType: RoutineType
@@ -364,16 +432,7 @@ export async function sendTestNotificationToUser(userId: string): Promise<{
   subscriptionCount: number;
   error: string | null;
 }> {
-  if (!isAdminClientConfigured()) {
-    return {
-      pushSent: 0,
-      pushFailed: 0,
-      subscriptionCount: 0,
-      error: "Push is not configured on this server.",
-    };
-  }
-
-  if (!isPushConfigured()) {
+  if (!isAdminClientConfigured() || !isPushConfigured()) {
     return {
       pushSent: 0,
       pushFailed: 0,
@@ -415,6 +474,50 @@ export async function sendTestNotificationToUser(userId: string): Promise<{
   }
 
   return { pushSent, pushFailed, subscriptionCount, error: null };
+}
+
+export async function sendMotivationalQuoteToMembers(
+  quote: string,
+  title?: string
+): Promise<{
+  members: number;
+  inboxDelivered: number;
+  devicesNotified: number;
+  pushFailed: number;
+  skippedNoPush: number;
+  error: string | null;
+}> {
+  const body = quote.trim();
+  if (!body) {
+    return {
+      members: 0,
+      inboxDelivered: 0,
+      devicesNotified: 0,
+      pushFailed: 0,
+      skippedNoPush: 0,
+      error: "Quote cannot be empty.",
+    };
+  }
+
+  if (body.length > 280) {
+    return {
+      members: 0,
+      inboxDelivered: 0,
+      devicesNotified: 0,
+      pushFailed: 0,
+      skippedNoPush: 0,
+      error: "Quote must be 280 characters or fewer.",
+    };
+  }
+
+  const headline = (title?.trim() || "The Reset Circle").slice(0, 60);
+
+  return broadcastToOnboardedMembers({
+    title: headline,
+    body,
+    url: "/notifications",
+    tag: `motivation-${Date.now()}`,
+  });
 }
 
 export async function markRemindersActioned(

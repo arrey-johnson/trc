@@ -1,5 +1,5 @@
+import Link from "next/link";
 import { MemberRow } from "@/components/admin/MemberRow";
-import { AdminTestNotificationsButton } from "@/components/admin/AdminTestNotificationsButton";
 import { CommitmentBadge } from "@/components/admin/CommitmentBadge";
 import { Card } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
@@ -82,13 +82,17 @@ export default async function AdminOverviewPage() {
 
       <Card className="mb-4 space-y-3 p-4">
         <h2 className="font-semibold text-[var(--foreground)]">
-          Push notifications
+          Motivate the circle
         </h2>
         <p className="text-sm text-[var(--muted)]">
-          Send a test notification to every member who has notifications
-          enabled on at least one device.
+          Send a motivational quote as a push notification to all members.
         </p>
-        <AdminTestNotificationsButton />
+        <Link
+          href="/admin/motivate"
+          className="inline-flex text-sm font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+        >
+          Open motivate →
+        </Link>
       </Card>
 
       <Card className="mb-4 space-y-3 p-4">

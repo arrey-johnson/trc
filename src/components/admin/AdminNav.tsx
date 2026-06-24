@@ -9,6 +9,7 @@ const ADMIN_NAV: {
   exact?: boolean;
 }[] = [
   { href: "/admin", label: "Overview", exact: true },
+  { href: "/admin/motivate", label: "Motivate" },
   { href: "/admin/people", label: "People" },
   { href: "/admin/commitment", label: "Commit" },
   { href: "/admin/library", label: "Library" },
