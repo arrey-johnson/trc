@@ -100,7 +100,7 @@ export function BookUploadForm() {
           accept="application/pdf"
           required
           onChange={handleFileChange}
-          className="mt-1 block w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2.5 text-sm text-[var(--foreground)] file:mr-3 file:rounded-lg file:border-0 file:bg-emerald-600 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white"
+          className="mt-1 block w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2.5 text-sm text-[var(--foreground)] file:mr-3 file:rounded-lg file:border-0 file:bg-brand file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white"
         />
         {fileName && fileSize !== null && (
           <p className="mt-1.5 text-xs text-[var(--muted)]">

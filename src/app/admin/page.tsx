@@ -89,7 +89,7 @@ export default async function AdminOverviewPage() {
         </p>
         <Link
           href="/admin/motivate"
-          className="inline-flex text-sm font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+          className="inline-flex text-sm font-semibold text-brand hover:underline dark:text-brand-muted"
         >
           Open motivate →
         </Link>
@@ -132,7 +132,7 @@ export default async function AdminOverviewPage() {
                 className="flex flex-1 flex-col items-center gap-1"
               >
                 <div
-                  className="w-full rounded-t-md bg-indigo-500/80"
+                  className="w-full rounded-t-md bg-brand/80"
                   style={{
                     height: `${Math.max(4, (day.logRate / 100) * 48)}px`,
                   }}

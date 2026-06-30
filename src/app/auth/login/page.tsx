@@ -97,7 +97,7 @@ export default function LoginPage() {
           New here?{" "}
           <Link
             href="/auth/signup"
-            className="font-semibold text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-400"
+            className="font-semibold text-brand-subtle-fg underline-offset-2 hover:underline dark:text-brand-muted"
           >
             Create an account
           </Link>
@@ -123,7 +123,7 @@ export default function LoginPage() {
             <Label htmlFor="password">Password</Label>
             <Link
               href="/auth/forgot-password"
-              className="text-xs font-medium text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-400"
+              className="text-xs font-medium text-brand-subtle-fg underline-offset-2 hover:underline dark:text-brand-muted"
             >
               Forgot password?
             </Link>

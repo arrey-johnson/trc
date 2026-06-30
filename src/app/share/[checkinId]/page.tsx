@@ -92,6 +92,43 @@ export default async function SharePage({ params }: SharePageProps) {
 
   const streak = calculateStreak(pastCheckins ?? [], checkin.date);
 
+  let nonNegotiablesSection:
+    | {
+        items: ReportItem[];
+        completedAll?: boolean;
+        reflection?: string;
+      }
+    | undefined;
+
+  if (routineType === "evening") {
+    const [{ data: nnItems }, { data: nnReview }] = await Promise.all([
+      supabase
+        .from("daily_non_negotiables")
+        .select("label, target_time, is_completed, sort_order")
+        .eq("user_id", user.id)
+        .eq("date", checkin.date)
+        .order("target_time")
+        .order("sort_order"),
+      supabase
+        .from("daily_non_negotiable_reviews")
+        .select("completed_all, reflection")
+        .eq("user_id", user.id)
+        .eq("date", checkin.date)
+        .maybeSingle(),
+    ]);
+
+    if ((nnItems ?? []).length > 0) {
+      nonNegotiablesSection = {
+        items: (nnItems ?? []).map((item) => ({
+          label: item.label,
+          wasDone: item.is_completed,
+        })),
+        completedAll: nnReview?.completed_all,
+        reflection: nnReview?.reflection ?? undefined,
+      };
+    }
+  }
+
   const report = generateReport({
     routineType,
     displayName: profile?.display_name ?? "Member",
@@ -99,6 +136,7 @@ export default async function SharePage({ params }: SharePageProps) {
     items: reportItems,
     streak,
     timezone,
+    nonNegotiables: nonNegotiablesSection,
   });
 
   return (

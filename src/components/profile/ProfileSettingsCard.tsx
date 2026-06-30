@@ -128,7 +128,7 @@ export function ProfileSettingsCard({ profile }: { profile: User }) {
 
         {error && <p className="text-sm text-red-600">{error}</p>}
         {message && (
-          <p className="text-sm text-emerald-700 dark:text-emerald-300">
+          <p className="text-sm text-brand-subtle-fg dark:text-brand-muted">
             {message}
           </p>
         )}

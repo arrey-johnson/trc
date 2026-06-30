@@ -1,29 +1,27 @@
-import { redirect } from "next/navigation";
 import { ButtonLink, Card, PageShell } from "@/components/ui";
 import { ROUTINE_LABELS } from "@/lib/constants";
 import { getTodayInTimezone } from "@/lib/dates";
-import { getAuthUser, getCurrentUser } from "@/lib/auth";
+import { requireMember } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { formatWeekRange, getDateRange, weekdayShort } from "@/lib/week";
 import {
+  buildNonNegotiableWeekStats,
   buildWeeklyReport,
   dayStatusEmoji,
   dayStatusLabel,
+  nonNegotiableDayEmoji,
+  nonNegotiableDayLabel,
 } from "@/lib/weekly-stats";
 
 const TONE_STYLES = {
-  celebrate: "from-emerald-500 to-emerald-700",
-  solid: "from-teal-500 to-emerald-600",
-  grow: "from-amber-500 to-orange-500",
-  fresh: "from-sky-500 to-indigo-500",
+  celebrate: "from-[var(--brand-gradient-from)] via-[var(--brand-gradient-via)] to-[var(--brand-gradient-to)]",
+  solid: "from-brand-muted to-brand",
+  grow: "from-[var(--accent-priority)] to-[var(--brand-gradient-via)]",
+  fresh: "from-[var(--accent-evening)] to-brand",
 } as const;
 
 export default async function ProgressPage() {
-  const authUser = await getAuthUser();
-  if (!authUser) redirect("/auth/login");
-
-  const profile = await getCurrentUser();
-  if (!profile?.onboarding_complete) redirect("/onboarding");
+  const profile = await requireMember();
 
   const timezone = profile.timezone ?? "Africa/Douala";
   const today = getTodayInTimezone(timezone);
@@ -39,15 +37,23 @@ export default async function ProgressPage() {
   const routineList = routines ?? [];
   const routineIds = routineList.map((r) => r.id);
 
-  const { data: checkins } = routineIds.length
-    ? await supabase
-        .from("checkins")
-        .select("id, routine_id, date, status")
-        .eq("user_id", profile.id)
-        .in("routine_id", routineIds)
-        .gte("date", days[0])
-        .lte("date", days[days.length - 1])
-    : { data: [] };
+  const [{ data: checkins }, { data: nonNegotiableItems }] = await Promise.all([
+    routineIds.length
+      ? supabase
+          .from("checkins")
+          .select("id, routine_id, date, status")
+          .eq("user_id", profile.id)
+          .in("routine_id", routineIds)
+          .gte("date", days[0])
+          .lte("date", days[days.length - 1])
+      : Promise.resolve({ data: [] }),
+    supabase
+      .from("daily_non_negotiables")
+      .select("date, is_completed")
+      .eq("user_id", profile.id)
+      .gte("date", days[0])
+      .lte("date", days[days.length - 1]),
+  ]);
 
   const checkinIds = (checkins ?? []).map((c) => c.id);
   const { data: missItems } = checkinIds.length
@@ -65,6 +71,18 @@ export default async function ProgressPage() {
     missReasons: (missItems ?? []).map((i) => i.reason_if_not_done),
     today,
   });
+
+  const nnStats = buildNonNegotiableWeekStats({
+    days,
+    items: nonNegotiableItems ?? [],
+    today,
+  });
+
+  const todayNnMessage = !nnStats.todayHasItems
+    ? "Set your non-negotiables on the home screen to play for the win."
+    : nnStats.todayWon
+      ? "You've won today — all non-negotiables complete."
+      : `${nnStats.todayCompleted}/${nnStats.todayTotal} done — finish strong to win the day.`;
 
   return (
     <PageShell>
@@ -104,6 +122,73 @@ export default async function ProgressPage() {
       </header>
 
       <div className="space-y-4">
+        <Card className="space-y-4 border-2 border-brand/30 p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-brand">
+                Today&apos;s priority
+              </p>
+              <h2 className="text-lg font-semibold text-[var(--foreground)]">
+                Daily Non-Negotiables
+              </h2>
+              <p className="mt-1 text-sm text-[var(--muted)]">
+                {todayNnMessage}
+              </p>
+            </div>
+            {nnStats.todayHasItems && (
+              <span
+                className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                  nnStats.todayWon
+                    ? "bg-brand-subtle text-brand-subtle-fg"
+                    : "bg-[var(--accent-morning-subtle)] text-[var(--foreground)]"
+                }`}
+              >
+                {nnStats.todayWon
+                  ? "Won 🏆"
+                  : `${nnStats.todayCompleted}/${nnStats.todayTotal}`}
+              </span>
+            )}
+          </div>
+
+          <p className="text-sm text-[var(--muted)]">
+            {nnStats.winCount} day{nnStats.winCount === 1 ? "" : "s"} won this
+            week
+            {nnStats.daysWithItems > 0
+              ? ` · ${nnStats.winCount}/${nnStats.daysWithItems} with items set`
+              : ""}
+          </p>
+
+          <div className="grid grid-cols-7 gap-1.5">
+            {nnStats.days.map((day) => (
+              <div key={day.date} className="flex flex-col items-center gap-1">
+                <span className="text-[10px] font-medium text-[var(--muted)]">
+                  {weekdayShort(day.date, timezone)}
+                </span>
+                <div
+                  title={`${day.date}: ${nonNegotiableDayLabel(day.status)}${
+                    day.total > 0 ? ` (${day.completed}/${day.total})` : ""
+                  }`}
+                  className={`flex h-11 w-full items-center justify-center rounded-xl text-base ${
+                    day.status === "won"
+                      ? "bg-brand-subtle dark:bg-brand-subtle"
+                      : day.status === "pending"
+                        ? "bg-[var(--accent-morning-subtle)]"
+                        : day.status === "missed"
+                          ? "bg-red-100 dark:bg-red-900/40"
+                          : "bg-[var(--elevated)] text-[var(--muted)]"
+                  }`}
+                >
+                  {nonNegotiableDayEmoji(day.status)}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <ButtonLink href="/" className="w-full text-sm">
+            {nnStats.todayWon ? "View today" : "Finish today's list"}
+          </ButtonLink>
+        </Card>
+
         {report.routines.map((routine) => (
           <Card key={routine.routineId} className="space-y-4 p-5">
             <div className="flex items-start justify-between gap-3">
@@ -134,9 +219,9 @@ export default async function ProgressPage() {
                     title={`${day.date}: ${dayStatusLabel(day.status)}`}
                     className={`flex h-11 w-full items-center justify-center rounded-xl text-base ${
                       day.status === "complete"
-                        ? "bg-emerald-100 dark:bg-emerald-900/40"
+                        ? "bg-brand-subtle dark:bg-brand-subtle"
                         : day.status === "partial"
-                          ? "bg-amber-100 dark:bg-amber-900/40"
+                          ? "bg-[var(--accent-morning-subtle)]"
                           : day.status === "missed"
                             ? "bg-red-100 dark:bg-red-900/40"
                             : "bg-[var(--elevated)] text-[var(--muted)]"

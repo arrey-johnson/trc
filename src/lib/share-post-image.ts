@@ -1,10 +1,34 @@
 import { toPng } from "html-to-image";
 
+async function waitForImages(node: HTMLElement): Promise<void> {
+  const images = Array.from(node.querySelectorAll("img"));
+  await Promise.all(
+    images.map(
+      (img) =>
+        new Promise<void>((resolve) => {
+          if (img.complete && img.naturalHeight > 0) {
+            resolve();
+            return;
+          }
+          img.addEventListener("load", () => resolve(), { once: true });
+          img.addEventListener("error", () => resolve(), { once: true });
+        })
+    )
+  );
+}
+
 export async function captureElementAsPng(node: HTMLElement): Promise<string> {
+  await new Promise<void>((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+
+  await waitForImages(node);
+
   return toPng(node, {
     cacheBust: true,
-    pixelRatio: 2,
-    backgroundColor: "#fafaf9",
+    pixelRatio: Math.min(window.devicePixelRatio || 2, 2),
+    backgroundColor: "#ffffff",
+    fetchRequestInit: { mode: "cors", cache: "no-cache" },
   });
 }
 

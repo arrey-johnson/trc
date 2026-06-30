@@ -69,7 +69,7 @@ export default async function LibraryPage() {
               <Card className="space-y-3 p-5">
                   <div className="flex items-start gap-3">
                     <div
-                      className="flex h-14 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-lg text-white"
+                      className="flex h-14 w-10 shrink-0 items-center justify-center rounded-lg bg-brand text-lg text-white"
                       aria-hidden
                     >
                       📖
@@ -97,12 +97,12 @@ export default async function LibraryPage() {
                     </div>
                     <div className="h-2 overflow-hidden rounded-full bg-[var(--elevated)]">
                       <div
-                        className="h-full rounded-full bg-emerald-500 transition-all"
+                        className="h-full rounded-full bg-brand transition-all"
                         style={{ width: `${percent}%` }}
                       />
                     </div>
                     {pagesToday > 0 && (
-                      <p className="mt-2 text-xs text-emerald-700 dark:text-emerald-400">
+                      <p className="mt-2 text-xs text-brand-subtle-fg dark:text-brand-muted">
                         {pagesToday} page{pagesToday === 1 ? "" : "s"} read today
                       </p>
                     )}

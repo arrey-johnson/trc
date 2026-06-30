@@ -43,7 +43,7 @@ export default function ForgotPasswordPage() {
         footer={
           <Link
             href="/auth/login"
-            className="text-sm font-semibold text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-400"
+            className="text-sm font-semibold text-brand-subtle-fg underline-offset-2 hover:underline dark:text-brand-muted"
           >
             Back to sign in
           </Link>
@@ -64,7 +64,7 @@ export default function ForgotPasswordPage() {
       footer={
         <Link
           href="/auth/login"
-          className="text-sm font-semibold text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-400"
+          className="text-sm font-semibold text-brand-subtle-fg underline-offset-2 hover:underline dark:text-brand-muted"
         >
           Back to sign in
         </Link>

@@ -3,6 +3,7 @@ import { formatPostDate, forumCategoryLabel } from "@/lib/forum";
 
 export interface PostShareData {
   authorName: string;
+  authorAvatarUrl?: string | null;
   body: string;
   category: string;
   createdAt: string;
@@ -21,20 +22,30 @@ export function PostSharePreview({
   return (
     <div
       ref={innerRef}
-      className="pointer-events-none fixed -left-[9999px] top-0 z-[-1] w-[380px] overflow-hidden rounded-3xl bg-white text-stone-900 shadow-xl"
-      aria-hidden
+      className="w-[min(100%,380px)] shrink-0 overflow-hidden rounded-3xl bg-white text-stone-900 shadow-xl"
+      aria-hidden={false}
     >
-      <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 px-5 py-4 text-white">
-        <p className="text-xs font-semibold uppercase tracking-wider text-emerald-100">
+      <div className="bg-brand-gradient px-5 py-4 text-white">
+        <p className="text-xs font-semibold uppercase tracking-wider text-white/80">
           The Reset Circle
         </p>
         <p className="mt-1 text-lg font-bold">Forum</p>
       </div>
       <div className="p-5">
         <div className="flex items-start gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-800">
-            {initial}
-          </div>
+          {data.authorAvatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={data.authorAvatarUrl}
+              alt=""
+              crossOrigin="anonymous"
+              className="h-12 w-12 shrink-0 rounded-full object-cover"
+            />
+          ) : (
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-subtle text-lg font-bold text-brand-subtle-fg">
+              {initial}
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <p className="font-bold text-stone-900">{data.authorName}</p>
             <p className="text-xs text-stone-500">

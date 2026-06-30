@@ -33,7 +33,7 @@ export function UserAvatar({
 
   return (
     <div
-      className={`flex shrink-0 items-center justify-center rounded-full bg-emerald-100 font-bold text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200 ${sizeClass} ${className}`}
+      className={`flex shrink-0 items-center justify-center rounded-full bg-brand-subtle font-bold text-brand-subtle-fg dark:bg-brand-subtle dark:text-brand-muted ${sizeClass} ${className}`}
       aria-hidden
     >
       {initial}

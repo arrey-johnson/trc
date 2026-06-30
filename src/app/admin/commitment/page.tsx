@@ -44,7 +44,7 @@ export default async function AdminCommitmentPage() {
                 <div className="flex-1">
                   <div className="h-2 overflow-hidden rounded-full bg-stone-100 dark:bg-stone-800">
                     <div
-                      className="h-full rounded-full bg-indigo-500"
+                      className="h-full rounded-full bg-brand"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -92,7 +92,7 @@ export default async function AdminCommitmentPage() {
                 <td className="py-2 pr-2">
                   <Link
                     href={`/admin/people/${member.userId}`}
-                    className="font-medium text-[var(--foreground)] hover:text-indigo-600"
+                    className="font-medium text-[var(--foreground)] hover:text-brand"
                   >
                     {member.displayName.split(" ")[0]}
                   </Link>
@@ -102,7 +102,7 @@ export default async function AdminCommitmentPage() {
                   return (
                     <td key={d} className="py-2 text-center">
                       {logged ? (
-                        <span className="text-emerald-600" title={d}>
+                        <span className="text-brand" title={d}>
                           ●
                         </span>
                       ) : (
@@ -141,7 +141,7 @@ export default async function AdminCommitmentPage() {
             >
               <Link
                 href={`/admin/people/${m.userId}`}
-                className="font-medium hover:text-indigo-600"
+                className="font-medium hover:text-brand"
               >
                 {m.displayName}
               </Link>

@@ -44,7 +44,7 @@ export function ComposePost() {
         onChange={(e) => setBody(e.target.value.slice(0, FORUM_MAX_CHARS))}
         placeholder="Share a lesson, tip, or insight…"
         rows={3}
-        className="w-full resize-none rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-base text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+        className="w-full resize-none rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-base text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-brand focus:outline-none focus:ring-2 focus:ring-[var(--brand-ring)]"
       />
       <div className="flex items-center justify-between gap-2">
         <select

@@ -52,7 +52,7 @@ export function PeopleDirectory({ members }: { members: MemberStats[] }) {
             onClick={() => setTierFilter("all")}
             className={`rounded-full px-3 py-1 text-xs font-semibold ${
               tierFilter === "all"
-                ? "bg-indigo-600 text-white"
+                ? "btn-primary text-xs font-semibold"
                 : "bg-stone-100 text-stone-700 dark:bg-stone-800 dark:text-stone-300"
             }`}
           >
@@ -65,7 +65,7 @@ export function PeopleDirectory({ members }: { members: MemberStats[] }) {
               onClick={() => setTierFilter(tier)}
               className={`rounded-full px-2 py-1 text-xs font-semibold transition ${
                 tierFilter === tier
-                  ? "ring-2 ring-indigo-500 ring-offset-1"
+                  ? "ring-2 ring-brand ring-offset-1"
                   : ""
               }`}
             >

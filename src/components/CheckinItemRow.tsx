@@ -25,7 +25,7 @@ export function CheckinItemRow({
             type="button"
             aria-label={`Mark ${item.label} as done`}
             onClick={() => onAnswer(true)}
-            className={`flex h-14 w-14 items-center justify-center rounded-xl text-2xl transition ${
+            className={`flex h-14 w-14 items-center justify-center rounded-xl text-2xl transition active:scale-95 ${
               item.wasDone === true
                 ? "bg-emerald-100 ring-2 ring-emerald-500 dark:bg-emerald-900/40"
                 : "bg-[var(--elevated)] hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
@@ -37,7 +37,7 @@ export function CheckinItemRow({
             type="button"
             aria-label={`Mark ${item.label} as not done`}
             onClick={() => onAnswer(false)}
-            className={`flex h-14 w-14 items-center justify-center rounded-xl text-2xl transition ${
+            className={`flex h-14 w-14 items-center justify-center rounded-xl text-2xl transition active:scale-95 ${
               item.wasDone === false
                 ? "bg-red-100 ring-2 ring-red-500 dark:bg-red-900/40"
                 : "bg-[var(--elevated)] hover:bg-red-50 dark:hover:bg-red-950/30"
@@ -61,7 +61,7 @@ export function CheckinItemRow({
         </div>
       )}
       {item.wasDone === null && (
-        <p className="mt-2 text-xs text-amber-700">Tap ✅ or ❌ to answer</p>
+        <p className="mt-2 text-xs text-[var(--accent-morning-fg)]">Tap ✅ or ❌ to answer</p>
       )}
     </li>
   );

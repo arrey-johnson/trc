@@ -41,7 +41,7 @@ export default async function AdminForumPage() {
             <li key={post.id}>
               <Card className="space-y-2 p-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-800 dark:bg-indigo-900/40 dark:text-indigo-300">
+                  <span className="rounded-full bg-brand-subtle px-2 py-0.5 text-xs font-medium text-brand-subtle-fg dark:bg-brand-subtle dark:text-brand-muted">
                     {forumCategoryLabel(post.category)}
                   </span>
                   <span className="text-xs text-[var(--muted)]">
@@ -64,7 +64,7 @@ export default async function AdminForumPage() {
                   <div className="flex gap-2">
                     <Link
                       href={`/forum/${post.id}`}
-                      className="text-xs font-medium text-indigo-600"
+                      className="text-xs font-medium text-brand"
                     >
                       View
                     </Link>

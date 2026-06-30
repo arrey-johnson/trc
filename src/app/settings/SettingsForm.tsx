@@ -102,7 +102,7 @@ export function SettingsForm({ profile }: { profile: User }) {
           </p>
           <Link
             href="/routines"
-            className="inline-flex text-sm font-semibold text-emerald-700 hover:underline dark:text-emerald-400"
+            className="inline-flex text-sm font-semibold text-brand-subtle-fg hover:underline dark:text-brand-muted"
           >
             Edit morning & evening routines →
           </Link>
@@ -159,7 +159,7 @@ export function SettingsForm({ profile }: { profile: User }) {
             </div>
 
             {error && <p className="text-sm text-red-600">{error}</p>}
-            {message && <p className="text-sm text-emerald-700">{message}</p>}
+            {message && <p className="text-sm text-brand-subtle-fg">{message}</p>}
 
             <Button type="submit" disabled={saving}>
               {saving ? "Saving..." : "Save reminder times"}

@@ -16,14 +16,14 @@ export function MemberRow({
         <div className="min-w-0 flex-1">
           <Link
             href={`/admin/people/${member.userId}`}
-            className="font-semibold text-[var(--foreground)] hover:text-indigo-600"
+            className="font-semibold text-[var(--foreground)] hover:text-brand"
           >
             {member.displayName}
           </Link>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <CommitmentBadge tier={member.tier} />
             {member.role === "admin" && (
-              <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-xs font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+              <span className="rounded-full bg-brand-subtle px-2 py-0.5 text-xs font-medium text-brand-subtle-fg dark:bg-brand-subtle dark:text-brand-muted">
                 Admin
               </span>
             )}
@@ -45,7 +45,7 @@ export function MemberRow({
           href={whatsappUrl(member.phoneNumber)}
           target="_blank"
           rel="noopener noreferrer"
-          className="shrink-0 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700"
+          className="shrink-0 rounded-xl btn-primary px-3 py-2 text-xs font-semibold"
           aria-label={`WhatsApp ${member.displayName}`}
         >
           WA

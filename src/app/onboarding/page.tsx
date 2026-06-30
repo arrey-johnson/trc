@@ -220,7 +220,7 @@ export default function OnboardingPage() {
     >
       <div className="mb-4 h-2 overflow-hidden rounded-full bg-stone-200">
         <div
-          className="h-full bg-emerald-500 transition-all"
+          className="h-full bg-brand transition-all"
           style={{ width: `${((stepIndex + 1) / STEPS.length) * 100}%` }}
         />
       </div>

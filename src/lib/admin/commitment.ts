@@ -52,7 +52,7 @@ export const TIER_LABELS: Record<CommitmentTier, string> = {
 };
 
 export const TIER_STYLES: Record<CommitmentTier, string> = {
-  strong: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+  strong: "bg-brand-subtle text-brand-subtle-fg dark:bg-brand-subtle dark:text-brand-muted",
   steady: "bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300",
   slipping: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
   at_risk: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-300",

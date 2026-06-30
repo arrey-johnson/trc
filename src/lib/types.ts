@@ -62,6 +62,27 @@ export interface ReportItem {
   reason?: string;
 }
 
+export interface DailyNonNegotiable {
+  id: string;
+  user_id: string;
+  date: string;
+  label: string;
+  target_time: string;
+  is_completed: boolean;
+  completed_at: string | null;
+  sort_order: number;
+  created_at: string;
+}
+
+export interface DailyNonNegotiableReview {
+  id: string;
+  user_id: string;
+  date: string;
+  completed_all: boolean;
+  reflection: string | null;
+  submitted_at: string;
+}
+
 export interface ForumPost {
   id: string;
   author_id: string;

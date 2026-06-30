@@ -5,10 +5,8 @@ const baseBtnStyles =
   "inline-flex min-h-12 items-center justify-center rounded-xl px-4 text-base font-semibold transition active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50";
 
 const buttonVariants = {
-  primary:
-    "bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-500",
-  secondary:
-    "bg-stone-100 text-stone-900 hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-100 dark:hover:bg-stone-700",
+  primary: "btn-primary",
+  secondary: "btn-secondary",
   ghost:
     "bg-transparent text-stone-700 hover:bg-stone-100 dark:text-stone-300 dark:hover:bg-stone-800",
   danger:
@@ -63,7 +61,7 @@ export function Input({
 }: InputHTMLAttributes<HTMLInputElement>) {
   return (
     <input
-      className={`min-h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-4 text-base text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 ${className}`}
+      className={`min-h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-4 text-base text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-brand focus:outline-none focus:ring-2 focus:ring-[var(--brand-ring)] ${className}`}
       {...props}
     />
   );

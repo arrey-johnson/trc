@@ -45,6 +45,7 @@ export function FeedPostCard({
 
   const shareData = {
     authorName: post.author?.display_name ?? "Member",
+    authorAvatarUrl: post.author?.avatar_url,
     body: post.body,
     category: post.category,
     createdAt: post.created_at,
@@ -77,7 +78,7 @@ export function FeedPostCard({
                   · {formatPostDate(post.created_at, timezone)}
                 </span>
               </div>
-              <span className="mt-0.5 inline-block text-xs text-emerald-700 dark:text-emerald-400">
+              <span className="mt-0.5 inline-block text-xs text-brand-subtle-fg dark:text-brand-muted">
                 {forumCategoryLabel(post.category)}
               </span>
             </Link>

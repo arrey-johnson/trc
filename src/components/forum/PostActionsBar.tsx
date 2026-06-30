@@ -62,7 +62,7 @@ export function PostActionsBar({
         href={replyHref ?? `/forum/${postId}`}
         onClick={stop}
         aria-label={`${replyCount} replies`}
-        className={`${actionBase} text-[var(--foreground)] hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:border-emerald-800 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-400`}
+        className={`${actionBase} text-[var(--foreground)] hover:border-brand-border hover:bg-brand-subtle hover:text-brand-subtle-fg dark:hover:border-brand-border dark:hover:bg-brand-subtle dark:hover:text-brand-muted`}
       >
         <CommentIcon />
         <span>{replyCount || "Reply"}</span>

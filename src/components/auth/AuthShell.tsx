@@ -15,7 +15,7 @@ export function AuthShell({
   return (
     <div className="relative mx-auto flex min-h-screen w-full max-w-md flex-col px-4 py-8 pb-10">
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-        <div className="absolute -top-20 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-emerald-300/30 blur-3xl dark:bg-emerald-700/15" />
+        <div className="absolute -top-20 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-brand-muted/25 blur-3xl dark:bg-brand/15" />
         <div className="absolute bottom-0 right-0 h-48 w-48 translate-x-1/4 rounded-full bg-orange-300/20 blur-3xl dark:bg-orange-800/10" />
         <div className="absolute left-0 top-1/3 h-40 w-40 -translate-x-1/4 rounded-full bg-pink-300/20 blur-3xl dark:bg-pink-900/10" />
       </div>
@@ -31,7 +31,7 @@ export function AuthShell({
             className="h-[88px] w-[88px] rounded-[20px]"
           />
         </div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700 dark:text-emerald-400">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-subtle-fg dark:text-brand-muted">
           The Reset Circle
         </p>
         <h1 className="mt-1 text-2xl font-bold tracking-tight text-[var(--foreground)]">

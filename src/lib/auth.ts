@@ -40,12 +40,18 @@ export async function requireAuthUser() {
   return user;
 }
 
-export async function requireAdmin(): Promise<User> {
-  const authUser = await getAuthUser();
-  if (!authUser) redirect("/auth/login");
-
+/** Single auth round-trip: login + onboarding gate for member pages. */
+export async function requireMember(): Promise<User> {
   const profile = await getCurrentUser();
-  if (!profile?.onboarding_complete) redirect("/onboarding");
+  if (!profile) redirect("/auth/login");
+  if (!profile.onboarding_complete) redirect("/onboarding");
+  return profile;
+}
+
+export async function requireAdmin(): Promise<User> {
+  const profile = await getCurrentUser();
+  if (!profile) redirect("/auth/login");
+  if (!profile.onboarding_complete) redirect("/onboarding");
   if (profile.whatsapp_group_role !== "admin") redirect("/");
 
   return profile;

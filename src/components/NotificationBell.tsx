@@ -6,7 +6,6 @@ import { createClient } from "@/lib/supabase/client";
 
 export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number }) {
   const [unread, setUnread] = useState(initialUnread);
-  const supabase = createClient();
 
   useEffect(() => {
     setUnread(initialUnread);
@@ -15,7 +14,8 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
   useEffect(() => {
     let cancelled = false;
 
-    async function load() {
+    async function poll() {
+      const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -30,13 +30,12 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
       if (!cancelled) setUnread(count ?? 0);
     }
 
-    load();
-    const interval = setInterval(load, 60_000);
+    const interval = setInterval(poll, 60_000);
     return () => {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [supabase]);
+  }, []);
 
   return (
     <Link
@@ -63,7 +62,7 @@ export function NotificationBell({ initialUnread = 0 }: { initialUnread?: number
         <path d="M13.73 21a2 2 0 0 1-3.46 0" />
       </svg>
       {unread > 0 && (
-        <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-400 px-1 text-[10px] font-bold text-amber-950">
+        <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[var(--accent-priority)] px-1 text-[10px] font-bold text-white">
           {unread > 9 ? "9+" : unread}
         </span>
       )}

@@ -4,8 +4,8 @@
   "description": "Daily accountability check-ins for The Reset Circle — log your routine, share to WhatsApp.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "background_color": "#fffbf7",
+  "theme_color": "#7c3aed",
   "orientation": "portrait",
   "icons": [
     {

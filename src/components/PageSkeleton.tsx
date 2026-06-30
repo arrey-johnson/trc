@@ -1,3 +1,5 @@
+"use client";
+
 import { PageShell } from "@/components/ui";
 
 export function PageSkeleton({ lines = 3 }: { lines?: number }) {
@@ -45,9 +47,9 @@ export function ForumPageSkeleton() {
   );
 }
 
-export function CheckinPageSkeleton() {
+export function CheckinPageSkeleton({ title = "Loading…" }: { title?: string }) {
   return (
-    <PageShell title="Loading…" subtitle="One moment">
+    <PageShell title={title} subtitle="One moment">
       <div className="space-y-3">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="h-24 animate-pulse rounded-2xl border border-[var(--border)] bg-[var(--card)]" />

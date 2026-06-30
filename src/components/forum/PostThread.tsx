@@ -111,6 +111,7 @@ export function PostThread({
 
   const shareData = {
     authorName: post.author?.display_name ?? "Member",
+    authorAvatarUrl: post.author?.avatar_url,
     body: post.body,
     category: post.category,
     createdAt: post.created_at,
@@ -160,7 +161,7 @@ export function PostThread({
                     {formatPostDate(post.created_at, timezone)}
                   </span>
                 </div>
-                <span className="text-xs text-emerald-700 dark:text-emerald-400">
+                <span className="text-xs text-brand-subtle-fg dark:text-brand-muted">
                   {forumCategoryLabel(post.category)}
                 </span>
               </div>
@@ -235,7 +236,7 @@ export function PostThread({
           onChange={(e) => setBody(e.target.value.slice(0, FORUM_MAX_CHARS))}
           placeholder="Write a reply…"
           rows={2}
-          className="w-full resize-none rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-emerald-500 focus:outline-none"
+          className="w-full resize-none rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-brand focus:outline-none"
         />
         <div className="flex items-center justify-between">
           <span className="text-xs text-[var(--muted)]">{remaining}</span>

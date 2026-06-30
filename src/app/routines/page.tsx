@@ -1,13 +1,18 @@
 import { RoutineEditor } from "@/components/RoutineEditor";
-import { getAuthUser, getCurrentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { requireMember } from "@/lib/auth";
+import { loadRoutineEditorData } from "@/lib/routines/load-routines";
+import type { RoutineType } from "@/lib/types";
 
-export default async function RoutinesPage() {
-  const authUser = await getAuthUser();
-  if (!authUser) redirect("/auth/login");
+interface RoutinesPageProps {
+  searchParams: { tab?: string };
+}
 
-  const profile = await getCurrentUser();
-  if (!profile?.onboarding_complete) redirect("/onboarding");
+export default async function RoutinesPage({ searchParams }: RoutinesPageProps) {
+  const profile = await requireMember();
+  const initialData = await loadRoutineEditorData(profile.id);
 
-  return <RoutineEditor />;
+  const initialTab: RoutineType =
+    searchParams.tab === "evening" ? "evening" : "morning";
+
+  return <RoutineEditor initialTab={initialTab} initialData={initialData} />;
 }

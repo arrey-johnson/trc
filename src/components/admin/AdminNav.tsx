@@ -40,7 +40,7 @@ export function AdminNav() {
                 aria-current={isActive ? "page" : undefined}
                 className={`flex min-h-10 flex-1 flex-col items-center justify-center rounded-xl px-1 py-1.5 text-[10px] font-semibold transition ${
                   isActive
-                    ? "bg-indigo-600 text-white"
+                    ? "nav-active"
                     : "text-[var(--muted)] hover:text-[var(--foreground)]"
                 }`}
               >

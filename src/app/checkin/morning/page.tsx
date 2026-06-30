@@ -1,5 +1,15 @@
 import CheckinPage from "@/components/CheckinPage";
+import { requireMember } from "@/lib/auth";
+import { loadCheckinPageData } from "@/lib/checkin/load-checkin";
 
-export default function MorningCheckinPage() {
-  return <CheckinPage routineType="morning" />;
+export default async function MorningCheckinPage() {
+  const profile = await requireMember();
+  const data = await loadCheckinPageData(
+    profile.id,
+    "morning",
+    profile.timezone ?? "Africa/Douala",
+    profile.evening_reminder_time
+  );
+
+  return <CheckinPage routineType="morning" initialData={data} />;
 }

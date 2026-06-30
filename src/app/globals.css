@@ -3,25 +3,82 @@
 @tailwind utilities;
 
 :root {
-  --background: #fafaf9;
-  --surface: #f5f5f4;
+  --background: #fffbf7;
+  --surface: #fff7ed;
   --card: #ffffff;
   --foreground: #1c1917;
   --muted: #78716c;
-  --border: #e7e5e4;
+  --border: #fde8d8;
   --input-bg: #ffffff;
-  --elevated: #fafaf9;
+  --elevated: #fffaf5;
+
+  /* Brand — vibrant violet */
+  --brand: #7c3aed;
+  --brand-hover: #6d28d9;
+  --brand-foreground: #ffffff;
+  --brand-subtle: #ede9fe;
+  --brand-subtle-fg: #5b21b6;
+  --brand-muted: #a78bfa;
+  --brand-border: #c4b5fd;
+  --brand-ring: rgba(124, 58, 237, 0.28);
+
+  /* Sunrise header gradient */
+  --brand-gradient-from: #7c3aed;
+  --brand-gradient-via: #ea580c;
+  --brand-gradient-to: #f59e0b;
+
+  --btn-secondary-bg: #ede9fe;
+  --btn-secondary-fg: #5b21b6;
+  --btn-secondary-border: #c4b5fd;
+
+  /* Semantic accents */
+  --accent-morning: #f59e0b;
+  --accent-morning-subtle: #fef3c7;
+  --accent-morning-fg: #b45309;
+  --accent-evening: #6366f1;
+  --accent-evening-subtle: #e0e7ff;
+  --accent-evening-fg: #4338ca;
+  --accent-priority: #f43f5e;
+  --accent-priority-subtle: #ffe4e6;
+  --accent-priority-fg: #be123c;
 }
 
 .dark {
-  --background: #0c0a09;
-  --surface: #1c1917;
-  --card: #292524;
+  --background: #0f0a1a;
+  --surface: #1a1225;
+  --card: #241b33;
   --foreground: #fafaf9;
   --muted: #a8a29e;
-  --border: #44403c;
-  --input-bg: #1c1917;
-  --elevated: #1c1917;
+  --border: #3d2f54;
+  --input-bg: #1a1225;
+  --elevated: #1a1225;
+
+  --brand: #a78bfa;
+  --brand-hover: #c4b5fd;
+  --brand-foreground: #1e1033;
+  --brand-subtle: #2e1f47;
+  --brand-subtle-fg: #ddd6fe;
+  --brand-muted: #8b5cf6;
+  --brand-border: #4c3575;
+  --brand-ring: rgba(167, 139, 250, 0.35);
+
+  --brand-gradient-from: #5b21b6;
+  --brand-gradient-via: #c2410c;
+  --brand-gradient-to: #b45309;
+
+  --btn-secondary-bg: #2e1f47;
+  --btn-secondary-fg: #ddd6fe;
+  --btn-secondary-border: #4c3575;
+
+  --accent-morning: #fbbf24;
+  --accent-morning-subtle: #422006;
+  --accent-morning-fg: #fcd34d;
+  --accent-evening: #818cf8;
+  --accent-evening-subtle: #1e1b4b;
+  --accent-evening-fg: #a5b4fc;
+  --accent-priority: #fb7185;
+  --accent-priority-subtle: #4c0519;
+  --accent-priority-fg: #fda4af;
 }
 
 @layer base {
@@ -72,6 +129,39 @@
 
   .touch-manipulation {
     touch-action: manipulation;
+  }
+
+  .bg-brand-gradient {
+    background-image: linear-gradient(
+      135deg,
+      var(--brand-gradient-from) 0%,
+      var(--brand-gradient-via) 55%,
+      var(--brand-gradient-to) 100%
+    );
+  }
+
+  .btn-primary {
+    background-color: var(--brand);
+    color: var(--brand-foreground);
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--brand-hover);
+  }
+
+  .btn-secondary {
+    background-color: var(--btn-secondary-bg);
+    color: var(--btn-secondary-fg);
+    border: 1px solid var(--btn-secondary-border);
+  }
+
+  .btn-secondary:hover:not(:disabled) {
+    background-color: var(--brand-border);
+  }
+
+  .nav-active {
+    background-color: var(--brand);
+    color: var(--brand-foreground);
   }
 }
 

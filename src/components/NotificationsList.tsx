@@ -90,7 +90,7 @@ export function NotificationsList({
         </p>
         <Link
           href="/settings"
-          className="mt-4 inline-block text-sm font-medium text-emerald-700"
+          className="mt-4 inline-block text-sm font-medium text-brand-subtle-fg"
         >
           Notification settings →
         </Link>
@@ -123,7 +123,7 @@ export function NotificationsList({
               className={`w-full rounded-2xl border p-4 text-left transition active:scale-[0.99] ${
                 n.read_at
                   ? "border-[var(--border)] bg-[var(--card)]"
-                  : "border-emerald-200 bg-emerald-50/50 dark:border-emerald-800 dark:bg-emerald-950/40"
+                  : "border-brand-border bg-brand-subtle/50 dark:border-brand-border dark:bg-brand-subtle"
               }`}
             >
               <div className="flex items-start justify-between gap-2">

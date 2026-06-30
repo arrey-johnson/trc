@@ -33,7 +33,7 @@ export default async function AdminMemberPage({
       <div className="mb-4">
         <Link
           href="/admin/people"
-          className="text-sm font-medium text-indigo-600 dark:text-indigo-400"
+          className="text-sm font-medium text-brand dark:text-brand-muted"
         >
           ← People
         </Link>
@@ -52,7 +52,7 @@ export default async function AdminMemberPage({
         <div className="mt-3 flex flex-wrap gap-2 text-xs text-[var(--muted)]">
           <span>{member.phoneNumber}</span>
           {member.role === "admin" && (
-            <span className="rounded bg-indigo-100 px-1.5 py-0.5 font-medium text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+            <span className="rounded bg-brand-subtle px-1.5 py-0.5 font-medium text-brand-subtle-fg dark:bg-brand-subtle dark:text-brand-muted">
               Admin
             </span>
           )}
@@ -113,7 +113,7 @@ export default async function AdminMemberPage({
                     title={`${day.date}: ${dayStatusLabel(day.status)}`}
                     className={`flex h-10 w-full items-center justify-center rounded-xl text-sm ${
                       day.status === "complete"
-                        ? "bg-emerald-100 dark:bg-emerald-900/30"
+                        ? "bg-brand-subtle dark:bg-brand-subtle"
                         : day.status === "partial"
                           ? "bg-amber-100 dark:bg-amber-900/30"
                           : day.status === "missed"
@@ -156,7 +156,7 @@ export default async function AdminMemberPage({
           href={whatsappUrl(member.phoneNumber)}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-emerald-600 px-4 text-base font-semibold text-white hover:bg-emerald-700"
+          className="inline-flex min-h-12 w-full items-center justify-center rounded-xl btn-primary px-4 text-base font-semibold"
         >
           Message on WhatsApp
         </a>

@@ -84,7 +84,7 @@ export default async function ForumPostPage({ params }: ForumPostPageProps) {
     <PageShell>
       <Link
         href="/forum"
-        className="mb-4 inline-flex text-sm font-medium text-emerald-700 dark:text-emerald-400"
+        className="mb-4 inline-flex text-sm font-medium text-brand-subtle-fg dark:text-brand-muted"
       >
         ← Back to feed
       </Link>

@@ -64,7 +64,7 @@ export function BookReaderClient({
       action={
         <Link
           href="/library"
-          className="text-sm font-medium text-emerald-700 dark:text-emerald-400"
+          className="text-sm font-medium text-brand-subtle-fg dark:text-brand-muted"
         >
           ← Library
         </Link>

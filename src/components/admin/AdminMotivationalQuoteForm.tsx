@@ -66,7 +66,7 @@ export function AdminMotivationalQuoteForm() {
           rows={4}
           onChange={(e) => setQuote(e.target.value)}
           placeholder="Small daily disciplines compound into extraordinary results."
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          className="w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2.5 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-brand focus:outline-none focus:ring-2 focus:ring-[var(--brand-ring)]"
         />
       </div>
 
@@ -77,7 +77,7 @@ export function AdminMotivationalQuoteForm() {
       )}
 
       {message && (
-        <p className="rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+        <p className="rounded-xl bg-brand-subtle px-3 py-2 text-sm text-brand-subtle-fg dark:bg-brand-subtle dark:text-brand-muted">
           {message}
         </p>
       )}

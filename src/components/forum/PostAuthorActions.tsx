@@ -235,7 +235,7 @@ export function PostEditForm({
         onChange={(e) => onBodyChange(e.target.value.slice(0, FORUM_MAX_CHARS))}
         rows={isReply ? 2 : 3}
         autoFocus
-        className="w-full resize-none rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+        className="w-full resize-none rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:border-brand focus:outline-none focus:ring-2 focus:ring-[var(--brand-ring)]"
       />
       {!isReply && (
         <select

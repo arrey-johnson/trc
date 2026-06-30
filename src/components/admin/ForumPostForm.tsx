@@ -81,7 +81,7 @@ export function ForumPostForm({ mode, postId, initial }: ForumPostFormProps) {
           id="category"
           name="category"
           defaultValue={initial?.category ?? "personal_development"}
-          className="min-h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-4 text-base text-[var(--foreground)] focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          className="min-h-12 w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-4 text-base text-[var(--foreground)] focus:border-brand focus:outline-none focus:ring-2 focus:ring-[var(--brand-ring)]"
         >
           {CATEGORIES.map((cat) => (
             <option key={cat} value={cat}>
@@ -100,7 +100,7 @@ export function ForumPostForm({ mode, postId, initial }: ForumPostFormProps) {
           rows={10}
           defaultValue={initial?.body ?? ""}
           placeholder="Write your guidance…"
-          className="w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-4 py-3 text-base text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+          className="w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-4 py-3 text-base text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-brand focus:outline-none focus:ring-2 focus:ring-[var(--brand-ring)]"
         />
       </div>
 

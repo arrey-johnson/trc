@@ -67,7 +67,7 @@ export default async function AdminBookDetailPage({ params }: AdminBookPageProps
     <>
       <Link
         href="/admin/library"
-        className="mb-4 inline-flex text-sm font-medium text-indigo-600"
+        className="mb-4 inline-flex text-sm font-medium text-brand"
       >
         ← Library
       </Link>
@@ -99,7 +99,7 @@ export default async function AdminBookDetailPage({ params }: AdminBookPageProps
                   <span className="font-medium text-[var(--foreground)]">
                     {r.displayName}
                     {r.active && (
-                      <span className="ml-2 text-xs text-emerald-600">● active</span>
+                      <span className="ml-2 text-xs text-brand">● active</span>
                     )}
                   </span>
                   <p className="text-xs text-[var(--muted)]">

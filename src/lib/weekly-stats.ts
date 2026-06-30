@@ -168,3 +168,87 @@ export function dayStatusLabel(status: DayStatus): string {
       return "No log";
   }
 }
+
+export type NonNegotiableDayStatus = "none" | "won" | "pending" | "missed";
+
+export interface NonNegotiableDayStats {
+  date: string;
+  status: NonNegotiableDayStatus;
+  total: number;
+  completed: number;
+}
+
+export interface NonNegotiableWeekStats {
+  days: NonNegotiableDayStats[];
+  winCount: number;
+  daysWithItems: number;
+  todayWon: boolean;
+  todayHasItems: boolean;
+  todayTotal: number;
+  todayCompleted: number;
+}
+
+export function buildNonNegotiableWeekStats(params: {
+  days: string[];
+  items: { date: string; is_completed: boolean }[];
+  today: string;
+}): NonNegotiableWeekStats {
+  const { days, items, today } = params;
+
+  const dayRows: NonNegotiableDayStats[] = days.map((date) => {
+    const dayItems = items.filter((i) => i.date === date);
+    const total = dayItems.length;
+    const completed = dayItems.filter((i) => i.is_completed).length;
+
+    if (total === 0) {
+      return { date, status: "none", total, completed };
+    }
+    if (completed === total) {
+      return { date, status: "won", total, completed };
+    }
+    if (date === today) {
+      return { date, status: "pending", total, completed };
+    }
+    return { date, status: "missed", total, completed };
+  });
+
+  const daysWithItems = dayRows.filter((d) => d.total > 0).length;
+  const winCount = dayRows.filter((d) => d.status === "won").length;
+  const todayRow = dayRows.find((d) => d.date === today);
+
+  return {
+    days: dayRows,
+    winCount,
+    daysWithItems,
+    todayWon: todayRow?.status === "won",
+    todayHasItems: (todayRow?.total ?? 0) > 0,
+    todayTotal: todayRow?.total ?? 0,
+    todayCompleted: todayRow?.completed ?? 0,
+  };
+}
+
+export function nonNegotiableDayEmoji(status: NonNegotiableDayStatus): string {
+  switch (status) {
+    case "won":
+      return "🏆";
+    case "pending":
+      return "⏳";
+    case "missed":
+      return "❌";
+    default:
+      return "·";
+  }
+}
+
+export function nonNegotiableDayLabel(status: NonNegotiableDayStatus): string {
+  switch (status) {
+    case "won":
+      return "Won the day";
+    case "pending":
+      return "In progress";
+    case "missed":
+      return "Did not win";
+    default:
+      return "No items";
+  }
+}

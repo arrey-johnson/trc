@@ -41,7 +41,7 @@ export function AdminForumEditPageClient({
       <div className="mb-4">
         <Link
           href="/admin/forum"
-          className="text-sm font-medium text-indigo-600 dark:text-indigo-400"
+          className="text-sm font-medium text-brand dark:text-brand-muted"
         >
           ← Forum
         </Link>
@@ -70,7 +70,7 @@ export function AdminForumEditPageClient({
         <div className="mt-4">
           <Link
             href={`/forum/${post.id}`}
-            className="text-sm font-medium text-emerald-600"
+            className="text-sm font-medium text-brand"
           >
             Preview as member →
           </Link>

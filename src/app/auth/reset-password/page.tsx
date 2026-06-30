@@ -75,7 +75,7 @@ export default function ResetPasswordPage() {
         footer={
           <Link
             href="/auth/forgot-password"
-            className="text-sm font-semibold text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-400"
+            className="text-sm font-semibold text-brand-subtle-fg underline-offset-2 hover:underline dark:text-brand-muted"
           >
             Request a new link
           </Link>
@@ -97,7 +97,7 @@ export default function ResetPasswordPage() {
         footer={
           <Link
             href="/auth/login"
-            className="text-sm font-semibold text-emerald-700 underline-offset-2 hover:underline dark:text-emerald-400"
+            className="text-sm font-semibold text-brand-subtle-fg underline-offset-2 hover:underline dark:text-brand-muted"
           >
             Sign in
           </Link>

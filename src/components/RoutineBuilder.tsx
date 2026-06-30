@@ -89,7 +89,7 @@ function SortableRoutineItem({
       style={style}
       className={`flex items-center gap-2 rounded-xl border bg-[var(--card)] p-2 ${
         isDragging
-          ? "z-10 border-emerald-400 shadow-lg ring-2 ring-emerald-200 dark:ring-emerald-800"
+          ? "z-10 border-brand-muted shadow-lg ring-2 ring-brand-border dark:ring-brand-border"
           : "border-[var(--border)]"
       }`}
     >
@@ -211,7 +211,6 @@ export function RoutineBuilder({
         )}
         <Button
           type="button"
-          variant="secondary"
           className="w-full"
           onClick={addItem}
           disabled={!newLabel.trim()}
