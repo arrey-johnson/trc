@@ -131,8 +131,9 @@ export async function saveReadingProgress(
   }
 
   const isEpub = book.format === "epub";
-  const min = isEpub ? 0 : 1;
-  const page = Math.max(min, Math.min(currentPage, book.page_count));
+  const page = isEpub
+    ? Math.max(0, Math.min(100, Math.round(currentPage)))
+    : Math.max(1, Math.min(currentPage, book.page_count));
   const today = todayForUser(profile.timezone);
   const now = new Date().toISOString();
 
@@ -143,19 +144,25 @@ export async function saveReadingProgress(
     .eq("user_id", profile.id)
     .maybeSingle();
 
-  const prevPage = existing?.current_page ?? min;
+  const prevPage = existing?.current_page ?? (isEpub ? 0 : 1);
   const pagesDelta = Math.max(0, page - prevPage);
 
-  await supabase.from("book_reading_progress").upsert(
-    {
-      book_id: bookId,
-      user_id: profile.id,
-      current_page: page,
-      epub_location: isEpub ? epubLocation ?? null : null,
-      last_read_at: now,
-    },
-    { onConflict: "book_id,user_id" }
-  );
+  const { error: progressError } = await supabase
+    .from("book_reading_progress")
+    .upsert(
+      {
+        book_id: bookId,
+        user_id: profile.id,
+        current_page: page,
+        epub_location: isEpub ? epubLocation ?? null : null,
+        last_read_at: now,
+      },
+      { onConflict: "book_id,user_id" }
+    );
+
+  if (progressError) {
+    return { error: progressError.message };
+  }
 
   if (pagesDelta > 0) {
     const { data: daily } = await supabase
@@ -176,6 +183,9 @@ export async function saveReadingProgress(
       { onConflict: "book_id,user_id,date" }
     );
   }
+
+  revalidatePath("/library");
+  revalidatePath(`/library/${bookId}`);
 
   return { error: null, currentPage: page };
 }

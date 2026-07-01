@@ -37,48 +37,57 @@ function ReplyCard({
 
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--elevated)] p-3">
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="font-semibold text-[var(--foreground)]">
-              {post.author?.display_name ?? "Member"}
-            </span>
-            <span className="text-xs text-[var(--muted)]">
-              {formatPostDate(post.created_at, timezone)}
-            </span>
-          </div>
-        </div>
-        {isAuthor && !authorActions.editing && (
-          <PostOwnerMenu
-            onEdit={authorActions.startEdit}
-            onDelete={authorActions.deletePost}
-            pending={authorActions.pending}
-          />
-        )}
-      </div>
-
-      {isAuthor && authorActions.editing ? (
-        <PostEditForm
-          body={authorActions.body}
-          category={authorActions.category}
-          isReply
-          remaining={authorActions.remaining}
-          error={authorActions.error}
-          pending={authorActions.pending}
-          onBodyChange={authorActions.setBody}
-          onCategoryChange={authorActions.setCategory}
-          onSubmit={authorActions.saveEdit}
-          onCancel={authorActions.cancelEdit}
+      <div className="flex items-start gap-3">
+        <UserAvatar
+          name={post.author?.display_name ?? "Member"}
+          avatarUrl={post.author?.avatar_url}
+          size="sm"
         />
-      ) : (
-        <p className="mt-1 whitespace-pre-wrap text-sm text-[var(--foreground)]">
-          {post.body}
-        </p>
-      )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 text-sm">
+                <span className="font-semibold text-[var(--foreground)]">
+                  {post.author?.display_name ?? "Member"}
+                </span>
+                <span className="text-xs text-[var(--muted)]">
+                  {formatPostDate(post.created_at, timezone)}
+                </span>
+              </div>
+            </div>
+            {isAuthor && !authorActions.editing && (
+              <PostOwnerMenu
+                onEdit={authorActions.startEdit}
+                onDelete={authorActions.deletePost}
+                pending={authorActions.pending}
+              />
+            )}
+          </div>
 
-      {isAuthor && authorActions.error && !authorActions.editing && (
-        <p className="mt-1 text-xs text-red-600">{authorActions.error}</p>
-      )}
+          {isAuthor && authorActions.editing ? (
+            <PostEditForm
+              body={authorActions.body}
+              category={authorActions.category}
+              isReply
+              remaining={authorActions.remaining}
+              error={authorActions.error}
+              pending={authorActions.pending}
+              onBodyChange={authorActions.setBody}
+              onCategoryChange={authorActions.setCategory}
+              onSubmit={authorActions.saveEdit}
+              onCancel={authorActions.cancelEdit}
+            />
+          ) : (
+            <p className="mt-1 whitespace-pre-wrap text-sm text-[var(--foreground)]">
+              {post.body}
+            </p>
+          )}
+
+          {isAuthor && authorActions.error && !authorActions.editing && (
+            <p className="mt-1 text-xs text-red-600">{authorActions.error}</p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -156,7 +165,9 @@ export function PostThread({
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold">{post.author?.display_name}</span>
+                  <span className="font-semibold">
+                    {post.author?.display_name ?? "Member"}
+                  </span>
                   <span className="text-xs text-[var(--muted)]">
                     {formatPostDate(post.created_at, timezone)}
                   </span>

@@ -131,6 +131,22 @@ $$;
 revoke all on function public.is_admin() from public;
 grant execute on function public.is_admin() to authenticated;
 
+create or replace function public.is_onboarded_member()
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (
+    select 1 from public.users
+    where id = auth.uid() and onboarding_complete = true
+  );
+$$;
+
+revoke all on function public.is_onboarded_member() from public;
+grant execute on function public.is_onboarded_member() to authenticated;
+
 create policy "Users read own profile"
   on public.users for select
   using (auth.uid() = id);
@@ -146,6 +162,13 @@ create policy "Users insert own profile"
 create policy "Admins read all profiles"
   on public.users for select
   using (public.is_admin());
+
+create policy "Members read onboarded peer profiles"
+  on public.users for select
+  using (
+    public.is_onboarded_member()
+    and onboarding_complete = true
+  );
 
 create policy "Users manage own daily non-negotiables"
   on public.daily_non_negotiables for all

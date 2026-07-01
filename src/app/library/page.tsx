@@ -4,7 +4,7 @@ import { LibraryReadLink } from "@/components/library/LibraryReadLink";
 import { Card, PageShell } from "@/components/ui";
 import {
   formatBookProgressLabel,
-  readingPercent,
+  resolveReadingPercent,
 } from "@/lib/books";
 import { getAuthUser, getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
@@ -73,7 +73,11 @@ export default async function LibraryPage() {
           const isEpub = book.format === "epub";
           const currentPage =
             progress?.current_page ?? (isEpub ? 0 : 1);
-          const percent = readingPercent(currentPage, book.page_count);
+          const percent = resolveReadingPercent(
+            book.format,
+            currentPage,
+            book.page_count
+          );
           const progressToday = todayMap.get(book.id) ?? 0;
 
           return (

@@ -89,6 +89,23 @@ async function displayInitialPage(
   await rendition.display();
 }
 
+async function reportLocation(
+  rendition: Rendition,
+  onProgress: EpubReaderProps["onProgressChange"]
+) {
+  const location = (await rendition.currentLocation()) as {
+    start?: { percentage?: number; cfi?: string };
+  } | null;
+  const epubLocation = location?.start?.cfi;
+  if (!epubLocation) return;
+
+  const percent = Math.round((location.start?.percentage ?? 0) * 100);
+  onProgress({
+    percent: Math.max(0, Math.min(100, percent)),
+    epubLocation,
+  });
+}
+
 export function EpubReader({
   bookId,
   bookData,
@@ -166,7 +183,9 @@ export function EpubReader({
           book,
           rendition,
           initialLocationRef.current
-        ).then(() => waitForFirstRender(rendition, cachedBook));
+        )
+          .then(() => waitForFirstRender(rendition, cachedBook))
+          .then(() => reportLocation(rendition, onProgressRef.current));
       })
       .then(() => {
         if (cancelled || !renditionRef.current || !viewerRef.current) return;

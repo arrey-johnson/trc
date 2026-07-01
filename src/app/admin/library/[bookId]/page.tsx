@@ -7,7 +7,7 @@ import { Card } from "@/components/ui";
 import {
   formatBookProgressLabel,
   isActiveReader,
-  readingPercent,
+  resolveReadingPercent,
   todayForUser,
 } from "@/lib/books";
 import { memberVisibilityLabel } from "@/lib/books/format";
@@ -64,7 +64,11 @@ export default async function AdminBookDetailPage({ params }: AdminBookPageProps
         ...p,
         displayName: member?.display_name ?? "Unknown",
         progressToday: dailyMap.get(p.user_id) ?? 0,
-        percent: readingPercent(p.current_page, book.page_count),
+        percent: resolveReadingPercent(
+          book.format,
+          p.current_page,
+          book.page_count
+        ),
         active: isActiveReader(p.last_read_at),
       };
     })
