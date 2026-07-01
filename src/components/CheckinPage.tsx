@@ -100,11 +100,22 @@ export default function CheckinPage({
   >(null);
   const [reflectionText, setReflectionText] = useState("");
   const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [leaving, setLeaving] = useState(false);
   const [isPending, startTransition] = useTransition();
   const userIdRef = useRef<string | null>(null);
+  const draftCheckinIdRef = useRef<string | null>(initialData?.draftCheckinId ?? null);
+  const itemsRef = useRef(items);
   const reasonSaveTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map()
   );
+
+  useEffect(() => {
+    draftCheckinIdRef.current = draftCheckinId;
+  }, [draftCheckinId]);
+
+  useEffect(() => {
+    itemsRef.current = items;
+  }, [items]);
 
   const title = ROUTINE_LABELS[routineType];
   const answeredCount = items.filter((i) => i.wasDone !== null).length;
@@ -127,7 +138,7 @@ export default function CheckinPage({
 
       setSaveState("saving");
 
-      let checkinId = draftCheckinId;
+      let checkinId = draftCheckinIdRef.current;
 
       if (!checkinId) {
         const { data: inserted, error: insertError } = await supabase
@@ -171,6 +182,7 @@ export default function CheckinPage({
         }
 
         setDraftCheckinId(checkinId);
+        draftCheckinIdRef.current = checkinId;
       }
 
       const { error: itemError } = await supabase.from("checkin_items").upsert(
@@ -193,11 +205,25 @@ export default function CheckinPage({
 
       setSaveState("saved");
     },
-    [routineId, draftCheckinId, today, supabase, ensureUserId]
+    [routineId, today, supabase, ensureUserId]
   );
 
-  const loadRoutine = useCallback(async () => {
-    setLoading(true);
+  const flushPendingSaves = useCallback(async () => {
+    reasonSaveTimers.current.forEach((timer) => clearTimeout(timer));
+    reasonSaveTimers.current.clear();
+
+    const snapshot = itemsRef.current;
+    await Promise.all(
+      snapshot
+        .filter((item) => item.wasDone !== null)
+        .map((item) => persistItem(item))
+    );
+  }, [persistItem]);
+
+  const loadRoutine = useCallback(async (options?: { background?: boolean }) => {
+    if (!options?.background) {
+      setLoading(true);
+    }
     setError(null);
     setEveningBlocked(false);
 
@@ -306,6 +332,7 @@ export default function CheckinPage({
 
     if (existing?.status === "draft") {
       setDraftCheckinId(existing.id);
+      draftCheckinIdRef.current = existing.id;
       const { data: savedItems } = await supabase
         .from("checkin_items")
         .select("routine_item_id, was_done, reason_if_not_done")
@@ -352,10 +379,22 @@ export default function CheckinPage({
   }, [routineType, supabase, router]);
 
   useEffect(() => {
-    if (!initialData) {
-      loadRoutine();
+    const hasSavedDraft =
+      Boolean(initialData?.draftCheckinId) &&
+      Object.keys(initialData?.savedAnswers ?? {}).length > 0;
+
+    if (!hasSavedDraft) {
+      void loadRoutine({ background: Boolean(initialData) });
     }
   }, [initialData, loadRoutine]);
+
+  async function handleLeave() {
+    if (leaving) return;
+    setLeaving(true);
+    await flushPendingSaves();
+    router.refresh();
+    router.push("/");
+  }
 
   useEffect(() => {
     const timers = reasonSaveTimers.current;
@@ -498,6 +537,16 @@ export default function CheckinPage({
       <PageShell
         title={title}
         subtitle="Step 1 — Non-negotiables review"
+        action={
+          <button
+            type="button"
+            onClick={() => void handleLeave()}
+            disabled={leaving}
+            className="text-sm font-medium text-brand-subtle-fg disabled:opacity-50 dark:text-brand-muted"
+          >
+            ← Back
+          </button>
+        }
       >
         {error && (
           <p className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
@@ -533,6 +582,16 @@ export default function CheckinPage({
     <PageShell
       title={title}
       subtitle={`${answeredCount}/${items.length} answered · saves automatically`}
+      action={
+        <button
+          type="button"
+          onClick={() => void handleLeave()}
+          disabled={leaving}
+          className="text-sm font-medium text-brand-subtle-fg disabled:opacity-50 dark:text-brand-muted"
+        >
+          ← Back
+        </button>
+      }
     >
       {error && (
         <p className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
@@ -569,9 +628,15 @@ export default function CheckinPage({
       </ul>
 
       <div className="mt-6 flex flex-col gap-2">
-        <ButtonLink href="/" variant="ghost" className="w-full">
-          Save & continue later
-        </ButtonLink>
+        <Button
+          type="button"
+          variant="ghost"
+          className="w-full"
+          disabled={leaving}
+          onClick={() => void handleLeave()}
+        >
+          {leaving ? "Saving…" : "Back home"}
+        </Button>
         {hasNonNegotiables && routineType === "evening" && (
           <Button
             type="button"
