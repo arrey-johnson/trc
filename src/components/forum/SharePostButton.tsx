@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ShareIcon } from "@/components/forum/ForumIcons";
 import {
   PostSharePreview,
@@ -20,6 +21,11 @@ interface SharePostButtonProps {
   onClick?: (e: React.MouseEvent) => void;
 }
 
+function stopModalAction(e: React.MouseEvent) {
+  e.preventDefault();
+  e.stopPropagation();
+}
+
 export function SharePostButton({
   data,
   className = "",
@@ -29,6 +35,11 @@ export function SharePostButton({
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -47,7 +58,9 @@ export function SharePostButton({
     setOpen(true);
   }
 
-  function closeModal() {
+  function closeModal(e?: React.MouseEvent) {
+    e?.preventDefault();
+    e?.stopPropagation();
     setOpen(false);
     setError(null);
     setBusy(false);
@@ -67,7 +80,8 @@ export function SharePostButton({
     }
   }
 
-  async function handleSave() {
+  async function handleSave(e: React.MouseEvent) {
+    stopModalAction(e);
     setBusy(true);
     setError(null);
     const url = await capturePreview();
@@ -76,7 +90,8 @@ export function SharePostButton({
     await downloadImage(url, "reset-circle-post.png");
   }
 
-  async function handleShare() {
+  async function handleShare(e: React.MouseEvent) {
+    stopModalAction(e);
     setBusy(true);
     setError(null);
     const url = await capturePreview();
@@ -86,6 +101,62 @@ export function SharePostButton({
     const shared = await shareImageFile(file, "The Reset Circle post");
     if (!shared) await downloadImage(url, "reset-circle-post.png");
   }
+
+  const modal =
+    open && mounted ? (
+      <div
+        className="fixed inset-0 z-[200] flex items-end justify-center bg-black/50 p-4 sm:items-center"
+        onClick={closeModal}
+        onMouseDown={stopModalAction}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Share post"
+      >
+        <div
+          className="flex max-h-[90vh] w-full max-w-md flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-2xl"
+          onClick={stopModalAction}
+          onMouseDown={stopModalAction}
+        >
+          <p className="mb-3 shrink-0 text-center text-sm font-semibold text-[var(--foreground)]">
+            Share this post
+          </p>
+
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <div className="mx-auto flex justify-center">
+              <PostSharePreview data={data} innerRef={previewRef} />
+            </div>
+          </div>
+
+          {error && (
+            <p className="mt-2 shrink-0 text-center text-xs text-red-600">
+              {error}
+            </p>
+          )}
+
+          <div className="mt-4 shrink-0 space-y-2">
+            <Button type="button" disabled={busy} onClick={handleShare}>
+              {busy ? "Preparing…" : "Share to WhatsApp or elsewhere"}
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={busy}
+              onClick={handleSave}
+            >
+              {busy ? "Preparing…" : "Save image"}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={busy}
+              onClick={closeModal}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </div>
+    ) : null;
 
   return (
     <>
@@ -108,58 +179,7 @@ export function SharePostButton({
         </p>
       )}
 
-      {open && (
-        <div
-          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 p-4 sm:items-center"
-          onClick={closeModal}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Share post"
-        >
-          <div
-            className="flex max-h-[90vh] w-full max-w-md flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <p className="mb-3 shrink-0 text-center text-sm font-semibold text-[var(--foreground)]">
-              Share this post
-            </p>
-
-            <div className="min-h-0 flex-1 overflow-y-auto">
-              <div className="mx-auto flex justify-center">
-                <PostSharePreview data={data} innerRef={previewRef} />
-              </div>
-            </div>
-
-            {error && (
-              <p className="mt-2 shrink-0 text-center text-xs text-red-600">
-                {error}
-              </p>
-            )}
-
-            <div className="mt-4 shrink-0 space-y-2">
-              <Button type="button" disabled={busy} onClick={handleShare}>
-                {busy ? "Preparing…" : "Share to WhatsApp or elsewhere"}
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={busy}
-                onClick={handleSave}
-              >
-                {busy ? "Preparing…" : "Save image"}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={busy}
-                onClick={closeModal}
-              >
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      {modal && createPortal(modal, document.body)}
     </>
   );
 }
