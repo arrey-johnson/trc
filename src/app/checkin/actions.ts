@@ -185,3 +185,8 @@ export async function submitRoutineCheckin(params: {
 
   return { error: null, checkinId };
 }
+
+export async function revalidateCheckinDraft(routineType: RoutineType) {
+  revalidatePath("/");
+  revalidatePath(`/checkin/${routineType}`);
+}

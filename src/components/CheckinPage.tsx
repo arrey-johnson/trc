@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { submitRoutineCheckin } from "@/app/checkin/actions";
+import { submitRoutineCheckin, revalidateCheckinDraft } from "@/app/checkin/actions";
 import {
   allItemsAnswered,
   allReasonsValid,
@@ -213,11 +213,11 @@ export default function CheckinPage({
     reasonSaveTimers.current.clear();
 
     const snapshot = itemsRef.current;
-    await Promise.all(
-      snapshot
-        .filter((item) => item.wasDone !== null)
-        .map((item) => persistItem(item))
-    );
+    for (const item of snapshot) {
+      if (item.wasDone !== null) {
+        await persistItem(item);
+      }
+    }
   }, [persistItem]);
 
   const loadRoutine = useCallback(async (options?: { background?: boolean }) => {
@@ -379,20 +379,14 @@ export default function CheckinPage({
   }, [routineType, supabase, router]);
 
   useEffect(() => {
-    const hasSavedDraft =
-      Boolean(initialData?.draftCheckinId) &&
-      Object.keys(initialData?.savedAnswers ?? {}).length > 0;
-
-    if (!hasSavedDraft) {
-      void loadRoutine({ background: Boolean(initialData) });
-    }
+    void loadRoutine({ background: Boolean(initialData) });
   }, [initialData, loadRoutine]);
 
   async function handleLeave() {
     if (leaving) return;
     setLeaving(true);
     await flushPendingSaves();
-    router.refresh();
+    await revalidateCheckinDraft(routineType);
     router.push("/");
   }
 
