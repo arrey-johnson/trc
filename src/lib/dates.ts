@@ -1,4 +1,4 @@
-import { DEFAULT_TIMEZONE } from "./constants";
+import { DEFAULT_TIMEZONE, EVENING_UNLOCK_TIME } from "./constants";
 
 /** Returns HH:MM (24h) in the given IANA timezone. */
 export function getCurrentTimeInTimezone(timezone = DEFAULT_TIMEZONE): string {
@@ -17,7 +17,7 @@ export function compareTimeStrings(a: string, b: string): number {
   return ah * 60 + am - (bh * 60 + bm);
 }
 
-/** True when local time in timezone is at or after evening_reminder_time. */
+/** True when local time in timezone is at or after the given HH:MM time. */
 export function isEveningInTimezone(
   timezone: string,
   eveningReminderTime: string
@@ -25,6 +25,16 @@ export function isEveningInTimezone(
   const now = getCurrentTimeInTimezone(timezone);
   const evening = eveningReminderTime.slice(0, 5);
   return compareTimeStrings(now, evening) >= 0;
+}
+
+/** True when local time is at or after the evening check-in unlock time (6:00 PM). */
+export function isEveningUnlockedInTimezone(timezone: string): boolean {
+  return isEveningInTimezone(timezone, EVENING_UNLOCK_TIME);
+}
+
+/** Display label for when evening check-in unlocks, e.g. "6:00 PM". */
+export function eveningUnlockLabel(): string {
+  return formatTimeForDisplay(EVENING_UNLOCK_TIME);
 }
 
 /** Formats a time string for display, e.g. "9:00 PM". */

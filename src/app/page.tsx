@@ -1,9 +1,9 @@
 import { HomeView } from "@/components/HomeView";
 import {
   formatReportDate,
-  formatTimeForDisplay,
   getTodayInTimezone,
-  isEveningInTimezone,
+  isEveningUnlockedInTimezone,
+  eveningUnlockLabel,
 } from "@/lib/dates";
 import { requireMember } from "@/lib/auth";
 import { getAvatarPublicUrl } from "@/lib/profile/avatar";
@@ -99,11 +99,8 @@ export default async function HomePage() {
   }
 
   const nnItems = nonNegotiables ?? [];
-  const isEvening = isEveningInTimezone(
-    profile.timezone,
-    profile.evening_reminder_time
-  );
-  const eveningUnlockLabel = formatTimeForDisplay(profile.evening_reminder_time);
+  const isEvening = isEveningUnlockedInTimezone(profile.timezone);
+  const eveningUnlockLabelText = eveningUnlockLabel();
 
   const routineCards = routineTypes.map((type) => {
     const routine = routines?.find((r) => r.type === type);
@@ -137,7 +134,7 @@ export default async function HomePage() {
       nnItems={nnItems}
       loggedCount={loggedCount}
       isEvening={isEvening}
-      eveningUnlockLabel={eveningUnlockLabel}
+      eveningUnlockLabel={eveningUnlockLabelText}
       unreadCount={unreadCount ?? 0}
       routines={routineCards}
     />

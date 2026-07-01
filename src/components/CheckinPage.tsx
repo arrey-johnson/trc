@@ -17,9 +17,9 @@ import { Button, ButtonLink, Card, PageShell } from "@/components/ui";
 import { ROUTINE_LABELS } from "@/lib/constants";
 import type { CheckinPageData } from "@/lib/checkin/types";
 import {
-  formatTimeForDisplay,
   getTodayInTimezone,
-  isEveningInTimezone,
+  isEveningUnlockedInTimezone,
+  eveningUnlockLabel as getEveningUnlockLabel,
 } from "@/lib/dates";
 import { friendlyDbError } from "@/lib/db-errors";
 import { createClient } from "@/lib/supabase/client";
@@ -234,9 +234,8 @@ export default function CheckinPage({
     setToday(todayStr);
 
     if (routineType === "evening") {
-      const eveningTime = profile.evening_reminder_time ?? "21:00";
-      if (!isEveningInTimezone(timezone, eveningTime)) {
-        setEveningUnlockLabel(formatTimeForDisplay(eveningTime));
+      if (!isEveningUnlockedInTimezone(timezone)) {
+        setEveningUnlockLabel(getEveningUnlockLabel());
         setEveningBlocked(true);
         setLoading(false);
         return;

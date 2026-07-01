@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
-import { getTodayInTimezone, isEveningInTimezone } from "@/lib/dates";
+import { getTodayInTimezone, isEveningUnlockedInTimezone, eveningUnlockLabel } from "@/lib/dates";
 import { friendlyDbError } from "@/lib/db-errors";
 import { deriveCheckinStatus } from "@/lib/streak";
 import { createClient } from "@/lib/supabase/server";
@@ -38,9 +38,9 @@ export async function submitRoutineCheckin(params: {
   }
 
   if (params.routineType === "evening") {
-    if (!isEveningInTimezone(profile.timezone, profile.evening_reminder_time)) {
+    if (!isEveningUnlockedInTimezone(profile.timezone)) {
       return {
-        error: "Evening check-in unlocks at your evening reminder time.",
+        error: `Evening check-in unlocks at ${eveningUnlockLabel()}.`,
         checkinId: null,
       };
     }

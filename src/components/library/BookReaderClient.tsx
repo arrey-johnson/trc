@@ -55,14 +55,20 @@ export function BookReaderClient({
   const [, startSave] = useTransition();
 
   useEffect(() => {
-    fetch(`/api/books/${bookId}/file`)
+    if (format === "epub") {
+      setFileUrl(`/api/books/${bookId}/file`);
+      setError(null);
+      return;
+    }
+
+    fetch(`/api/books/${bookId}/file?meta=1`)
       .then((r) => r.json())
       .then((data) => {
         if (data.url) setFileUrl(data.url);
         else setError(data.error ?? "Could not load book");
       })
       .catch(() => setError("Could not load book"));
-  }, [bookId]);
+  }, [bookId, format]);
 
   const handlePageChange = useCallback(
     (page: number) => {

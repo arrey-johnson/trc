@@ -1,7 +1,7 @@
 "use client";
 
+import ePub, { type Rendition } from "epubjs";
 import { useEffect, useRef, useState } from "react";
-import { ReactReader } from "react-reader";
 
 interface EpubReaderProps {
   url: string;
@@ -17,59 +17,158 @@ export function EpubReader({
   initialLocation,
   onProgressChange,
 }: EpubReaderProps) {
-  const [location, setLocation] = useState(initialLocation ?? "0");
-  const renditionRef = useRef<{ currentLocation: () => unknown } | null>(null);
+  const viewerRef = useRef<HTMLDivElement>(null);
+  const renditionRef = useRef<Rendition | null>(null);
+  const onProgressRef = useRef(onProgressChange);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const touchStartX = useRef<number | null>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (initialLocation) {
-      setLocation(initialLocation);
-    }
-  }, [initialLocation]);
+    onProgressRef.current = onProgressChange;
+  }, [onProgressChange]);
 
   useEffect(() => {
-    return () => {
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    };
-  }, []);
+    let cancelled = false;
+    const viewer = viewerRef.current;
+    if (!viewer) return;
 
-  function scheduleSave(epubLocation: string) {
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    setLoading(true);
+    setLoadError(false);
+    viewer.innerHTML = "";
 
-    saveTimerRef.current = setTimeout(() => {
-      const rendition = renditionRef.current;
-      if (!rendition) return;
+    fetch(url)
+      .then((response) => {
+        if (!response.ok) throw new Error("Failed to fetch EPUB");
+        return response.arrayBuffer();
+      })
+      .then((buffer) => {
+        if (cancelled) return;
 
-      const current = rendition.currentLocation() as {
-        start?: { percentage?: number };
-      } | null;
-      const percent = Math.round((current?.start?.percentage ?? 0) * 100);
-      onProgressChange({
-        percent: Math.max(0, Math.min(100, percent)),
-        epubLocation,
+        const book = ePub(buffer, { openAs: "binary" });
+
+        return book.ready.then(() => {
+          if (cancelled) return;
+
+          const rendition = book.renderTo(viewer, {
+            width: "100%",
+            height: "100%",
+            flow: "paginated",
+            manager: "default",
+          });
+
+          renditionRef.current = rendition;
+          rendition.flow("paginated");
+
+          rendition.on(
+            "relocated",
+            (location: { start?: { percentage?: number; cfi?: string } }) => {
+              const epubLocation = location.start?.cfi;
+              if (!epubLocation) return;
+
+              if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+              saveTimerRef.current = setTimeout(() => {
+                const percent = Math.round((location.start?.percentage ?? 0) * 100);
+                onProgressRef.current({
+                  percent: Math.max(0, Math.min(100, percent)),
+                  epubLocation,
+                });
+              }, 350);
+            }
+          );
+
+          if (initialLocation) {
+            return rendition.display(initialLocation);
+          }
+          return rendition.display();
+        });
+      })
+      .then(() => {
+        if (!cancelled) setLoading(false);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setLoadError(true);
+          setLoading(false);
+        }
       });
-    }, 350);
+
+    return () => {
+      cancelled = true;
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      renditionRef.current?.destroy();
+      renditionRef.current = null;
+      viewer.innerHTML = "";
+    };
+  }, [url, initialLocation]);
+
+  function handleTouchStart(clientX: number) {
+    touchStartX.current = clientX;
+  }
+
+  function handleTouchEnd(clientX: number) {
+    const rendition = renditionRef.current;
+    if (!rendition || touchStartX.current === null) return;
+
+    const delta = clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(delta) < 48) return;
+
+    if (delta < 0) rendition.next();
+    else rendition.prev();
   }
 
   return (
-    <div className="relative h-[70vh] min-h-[28rem] overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)]">
-      <ReactReader
-        url={url}
-        location={location}
-        locationChanged={(epubcfi) => {
-          setLocation(epubcfi);
-          scheduleSave(epubcfi);
-        }}
-        getRendition={(rendition) => {
-          renditionRef.current = rendition;
-          rendition.flow("paginated");
-        }}
-        epubOptions={{
-          flow: "paginated",
-          manager: "default",
-        }}
-        swipeable
+    <div
+      className="relative overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)]"
+      onTouchStart={(e) => handleTouchStart(e.changedTouches[0].clientX)}
+      onTouchEnd={(e) => handleTouchEnd(e.changedTouches[0].clientX)}
+    >
+      {loading && (
+        <div className="flex h-[70vh] min-h-[28rem] items-center justify-center text-[var(--muted)]">
+          Loading book…
+        </div>
+      )}
+
+      {loadError && (
+        <div className="flex h-[70vh] min-h-[28rem] items-center justify-center p-4 text-center text-sm text-red-600">
+          Could not load EPUB. Try refreshing the page.
+        </div>
+      )}
+
+      <div
+        ref={viewerRef}
+        className={
+          loading || loadError
+            ? "hidden"
+            : "h-[70vh] min-h-[28rem] w-full [&_iframe]:!h-full [&_iframe]:!w-full"
+        }
       />
+
+      {!loading && !loadError && (
+        <div className="flex items-center justify-between border-t border-[var(--border)] px-4 py-3 text-sm text-[var(--muted)]">
+          <span>Swipe left or right to turn pages</span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => renditionRef.current?.prev()}
+              className="rounded-lg px-3 py-1 hover:bg-[var(--elevated)] active:scale-95"
+              aria-label="Previous page"
+            >
+              ←
+            </button>
+            <button
+              type="button"
+              onClick={() => renditionRef.current?.next()}
+              className="rounded-lg px-3 py-1 hover:bg-[var(--elevated)] active:scale-95"
+              aria-label="Next page"
+            >
+              →
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

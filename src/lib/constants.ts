@@ -26,3 +26,6 @@ export const DEFAULT_REMINDER_TIMES: Record<RoutineType, string> = {
   morning: "07:00",
   evening: "21:00",
 };
+
+/** Evening check-in unlocks at this local time (independent of reminder time). */
+export const EVENING_UNLOCK_TIME = "18:00";

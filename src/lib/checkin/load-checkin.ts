@@ -1,4 +1,8 @@
-import { formatTimeForDisplay, getTodayInTimezone, isEveningInTimezone } from "@/lib/dates";
+import {
+  getTodayInTimezone,
+  isEveningUnlockedInTimezone,
+  eveningUnlockLabel,
+} from "@/lib/dates";
 import { createClient } from "@/lib/supabase/server";
 import type { CheckinPageData } from "@/lib/checkin/types";
 import type { RoutineType } from "@/lib/types";
@@ -17,10 +21,10 @@ export async function loadCheckinPageData(
   let hasNonNegotiables = false;
 
   if (routineType === "evening") {
-    if (!isEveningInTimezone(timezone, eveningTime)) {
+    if (!isEveningUnlockedInTimezone(timezone)) {
       return emptyCheckinData(today, timezone, eveningTime, {
         eveningBlocked: true,
-        eveningUnlockLabel: formatTimeForDisplay(eveningTime),
+        eveningUnlockLabel: eveningUnlockLabel(),
       });
     }
 
