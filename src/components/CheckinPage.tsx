@@ -105,6 +105,7 @@ export default function CheckinPage({
   const userIdRef = useRef<string | null>(null);
   const draftCheckinIdRef = useRef<string | null>(initialData?.draftCheckinId ?? null);
   const itemsRef = useRef(items);
+  const hasUserEditedRef = useRef(false);
   const reasonSaveTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
     new Map()
   );
@@ -206,6 +207,30 @@ export default function CheckinPage({
       setSaveState("saved");
     },
     [routineId, today, supabase, ensureUserId]
+  );
+
+  const clearItem = useCallback(
+    async (routineItemId: string) => {
+      const checkinId = draftCheckinIdRef.current;
+      if (!checkinId) return;
+
+      setSaveState("saving");
+
+      const { error: deleteError } = await supabase
+        .from("checkin_items")
+        .delete()
+        .eq("checkin_id", checkinId)
+        .eq("routine_item_id", routineItemId);
+
+      if (deleteError) {
+        setSaveState("error");
+        setError(friendlyDbError(deleteError.message, deleteError.code));
+        return;
+      }
+
+      setSaveState("saved");
+    },
+    [supabase]
   );
 
   const flushPendingSaves = useCallback(async () => {
@@ -364,17 +389,19 @@ export default function CheckinPage({
       return;
     }
 
-    setItems(
-      (itemsResult.data ?? []).map((ri) => {
-        const saved = savedAnswers[ri.id];
-        return {
-          routineItemId: ri.id,
-          label: ri.label,
-          wasDone: saved ? saved.wasDone : null,
-          reasonIfNotDone: saved?.reasonIfNotDone ?? "",
-        };
-      })
-    );
+    if (!hasUserEditedRef.current) {
+      setItems(
+        (itemsResult.data ?? []).map((ri) => {
+          const saved = savedAnswers[ri.id];
+          return {
+            routineItemId: ri.id,
+            label: ri.label,
+            wasDone: saved ? saved.wasDone : null,
+            reasonIfNotDone: saved?.reasonIfNotDone ?? "",
+          };
+        })
+      );
+    }
     setLoading(false);
   }, [routineType, supabase, router]);
 
@@ -402,16 +429,27 @@ export default function CheckinPage({
     patch: Partial<CheckinItemAnswer>,
     options?: { debounceReason?: boolean }
   ) {
+    if ("wasDone" in patch) {
+      hasUserEditedRef.current = true;
+    }
+
     setItems((prev) => {
       const next = prev.map((item) =>
         item.routineItemId === routineItemId ? { ...item, ...patch } : item
       );
       const updated = next.find((i) => i.routineItemId === routineItemId);
-      if (!updated || updated.wasDone === null) return next;
+      if (!updated) return next;
+
+      const existing = reasonSaveTimers.current.get(routineItemId);
+      if (existing) clearTimeout(existing);
+      reasonSaveTimers.current.delete(routineItemId);
+
+      if (updated.wasDone === null) {
+        void clearItem(routineItemId);
+        return next;
+      }
 
       if (options?.debounceReason) {
-        const existing = reasonSaveTimers.current.get(routineItemId);
-        if (existing) clearTimeout(existing);
         reasonSaveTimers.current.set(
           routineItemId,
           setTimeout(() => {
@@ -607,7 +645,7 @@ export default function CheckinPage({
             onAnswer={(wasDone) =>
               updateItem(item.routineItemId, {
                 wasDone,
-                reasonIfNotDone: wasDone ? "" : item.reasonIfNotDone,
+                reasonIfNotDone: wasDone === false ? item.reasonIfNotDone : "",
               })
             }
             onReasonChange={(reason) =>

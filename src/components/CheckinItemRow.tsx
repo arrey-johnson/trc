@@ -5,7 +5,7 @@ import { Input } from "./ui";
 
 interface CheckinItemRowProps {
   item: CheckinItemAnswer;
-  onAnswer: (wasDone: boolean) => void;
+  onAnswer: (wasDone: boolean | null) => void;
   onReasonChange: (reason: string) => void;
 }
 
@@ -24,7 +24,8 @@ export function CheckinItemRow({
           <button
             type="button"
             aria-label={`Mark ${item.label} as done`}
-            onClick={() => onAnswer(true)}
+            aria-pressed={item.wasDone === true}
+            onClick={() => onAnswer(item.wasDone === true ? null : true)}
             className={`flex h-14 w-14 items-center justify-center rounded-xl text-2xl transition active:scale-95 ${
               item.wasDone === true
                 ? "bg-emerald-100 ring-2 ring-emerald-500 dark:bg-emerald-900/40"
@@ -36,7 +37,8 @@ export function CheckinItemRow({
           <button
             type="button"
             aria-label={`Mark ${item.label} as not done`}
-            onClick={() => onAnswer(false)}
+            aria-pressed={item.wasDone === false}
+            onClick={() => onAnswer(item.wasDone === false ? null : false)}
             className={`flex h-14 w-14 items-center justify-center rounded-xl text-2xl transition active:scale-95 ${
               item.wasDone === false
                 ? "bg-red-100 ring-2 ring-red-500 dark:bg-red-900/40"
@@ -61,7 +63,14 @@ export function CheckinItemRow({
         </div>
       )}
       {item.wasDone === null && (
-        <p className="mt-2 text-xs text-[var(--accent-morning-fg)]">Tap ✅ or ❌ to answer</p>
+        <p className="mt-2 text-xs text-[var(--accent-morning-fg)]">
+          Tap ✅ or ❌ to answer
+        </p>
+      )}
+      {item.wasDone !== null && (
+        <p className="mt-2 text-xs text-[var(--muted)]">
+          Tap the selected button again to undo
+        </p>
       )}
     </li>
   );
