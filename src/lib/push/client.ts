@@ -195,3 +195,14 @@ export async function unsubscribeFromPush(
 
   return { ok: true };
 }
+
+/** True when permission is granted and the user has a saved subscription row. */
+export async function hasPushNotificationsEnabled(
+  hasDbSubscription: (userId: string) => Promise<boolean>,
+  userId: string
+): Promise<boolean> {
+  if (!isPushSupported()) return false;
+  const permission = await getNotificationPermission();
+  if (permission !== "granted") return false;
+  return hasDbSubscription(userId);
+}

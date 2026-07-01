@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { BottomNav } from "@/components/BottomNav";
 import { ChunkErrorHandler } from "@/components/ChunkErrorHandler";
+import { EnableNotificationsPrompt } from "@/components/EnableNotificationsPrompt";
 import { InstallAppPrompt } from "@/components/InstallAppPrompt";
 import { NavigationProgress } from "@/components/NavigationProgress";
 import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
@@ -96,6 +97,7 @@ export default function RootLayout({
           <NavigationProgress />
           {children}
           <InstallAppPrompt />
+          <EnableNotificationsPrompt />
           <BottomNav />
         </ThemeProvider>
       </body>
