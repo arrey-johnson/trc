@@ -42,9 +42,8 @@ export function PostActionsBar({
     ? "flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--elevated)] px-2.5 text-xs font-semibold transition active:scale-[0.98]"
     : actionBase;
 
-  function stop(e: React.MouseEvent) {
+  function handleBarPointer(e: React.MouseEvent) {
     if (stopPropagation) {
-      e.preventDefault();
       e.stopPropagation();
     }
   }
@@ -52,7 +51,7 @@ export function PostActionsBar({
   return (
     <div
       className={`flex items-stretch gap-2 ${isCompact ? "mt-2" : "mt-4"}`}
-      onClick={stopPropagation ? stop : undefined}
+      onClick={stopPropagation ? handleBarPointer : undefined}
     >
       <button
         type="button"
@@ -73,7 +72,7 @@ export function PostActionsBar({
         <button
           type="button"
           onClick={(e) => {
-            stop(e);
+            handleBarPointer(e);
             onReply();
           }}
           aria-label={`${replyCount} replies`}
@@ -87,7 +86,8 @@ export function PostActionsBar({
       ) : (
         <Link
           href={replyHref ?? `/forum/${postId}`}
-          onClick={stop}
+          onClick={handleBarPointer}
+          scroll={replyHref?.startsWith("#") ? false : true}
           aria-label={`${replyCount} replies`}
           className={`${actionClass} text-[var(--foreground)] hover:border-brand-border hover:bg-brand-subtle hover:text-brand-subtle-fg dark:hover:border-brand-border dark:hover:bg-brand-subtle dark:hover:text-brand-muted`}
         >
@@ -101,7 +101,7 @@ export function PostActionsBar({
       {showShare && shareData && (
         <SharePostButton
           data={shareData}
-          onClick={stop}
+          onClick={handleBarPointer}
           className={`${actionClass} text-[var(--foreground)] hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700 dark:hover:border-sky-800 dark:hover:bg-sky-950/30 dark:hover:text-sky-400`}
         />
       )}

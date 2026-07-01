@@ -129,6 +129,7 @@ export function FeedPostCard({
         likePending={pending}
         onLike={handleLike}
         shareData={shareData}
+        replyHref={`/forum/${post.id}#reply`}
         stopPropagation
       />
     </article>

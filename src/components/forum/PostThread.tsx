@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { replyToPost, togglePostLike } from "@/app/forum/actions";
 import {
   PostEditForm,
@@ -82,6 +82,21 @@ export function PostThread({
     });
   }
 
+  function scrollToReplyForm() {
+    const form = document.getElementById("reply");
+    form?.scrollIntoView({ behavior: "smooth", block: "center" });
+    const textarea = form?.querySelector("textarea");
+    if (textarea instanceof HTMLTextAreaElement) {
+      textarea.focus();
+    }
+  }
+
+  useEffect(() => {
+    if (window.location.hash === "#reply") {
+      scrollToReplyForm();
+    }
+  }, []);
+
   return (
     <div className="space-y-4">
       <article className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5">
@@ -147,7 +162,7 @@ export function PostThread({
           likePending={likePending}
           onLike={handleLike}
           shareData={shareData}
-          replyHref={`#reply`}
+          onReply={scrollToReplyForm}
         />
       </article>
 
