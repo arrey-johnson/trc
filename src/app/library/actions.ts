@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth";
 import { todayForUser } from "@/lib/books";
+import { isBookVisibleToMember, normalizeFeaturedMonth } from "@/lib/books/format";
 import { getCurrentUser } from "@/lib/auth";
 import {
   assignAllActiveBooksToMember,
@@ -97,7 +98,11 @@ export async function syncLibraryForCurrentMember() {
   return { error: null };
 }
 
-export async function saveReadingProgress(bookId: string, currentPage: number) {
+export async function saveReadingProgress(
+  bookId: string,
+  currentPage: number,
+  epubLocation?: string | null
+) {
   const profile = await getCurrentUser();
   if (!profile?.onboarding_complete) {
     return { error: "Not allowed." };
@@ -107,14 +112,27 @@ export async function saveReadingProgress(bookId: string, currentPage: number) {
 
   const { data: book } = await supabase
     .from("books")
-    .select("page_count")
+    .select("page_count, format, featured_month, hidden_from_members")
     .eq("id", bookId)
     .eq("is_active", true)
     .maybeSingle();
 
   if (!book) return { error: "Book not found." };
 
-  const page = Math.max(1, Math.min(currentPage, book.page_count));
+  if (
+    profile.whatsapp_group_role === "member" &&
+    !isBookVisibleToMember({
+      featuredMonth: book.featured_month,
+      hiddenFromMembers: book.hidden_from_members,
+      timezone: profile.timezone,
+    })
+  ) {
+    return { error: "Book not available." };
+  }
+
+  const isEpub = book.format === "epub";
+  const min = isEpub ? 0 : 1;
+  const page = Math.max(min, Math.min(currentPage, book.page_count));
   const today = todayForUser(profile.timezone);
   const now = new Date().toISOString();
 
@@ -125,7 +143,7 @@ export async function saveReadingProgress(bookId: string, currentPage: number) {
     .eq("user_id", profile.id)
     .maybeSingle();
 
-  const prevPage = existing?.current_page ?? 1;
+  const prevPage = existing?.current_page ?? min;
   const pagesDelta = Math.max(0, page - prevPage);
 
   await supabase.from("book_reading_progress").upsert(
@@ -133,6 +151,7 @@ export async function saveReadingProgress(bookId: string, currentPage: number) {
       book_id: bookId,
       user_id: profile.id,
       current_page: page,
+      epub_location: isEpub ? epubLocation ?? null : null,
       last_read_at: now,
     },
     { onConflict: "book_id,user_id" }
@@ -159,4 +178,31 @@ export async function saveReadingProgress(bookId: string, currentPage: number) {
   }
 
   return { error: null, currentPage: page };
+}
+
+export async function updateBookVisibility(
+  bookId: string,
+  input: {
+    featuredMonth: string;
+    hiddenFromMembers: boolean;
+  }
+) {
+  await requireAdmin();
+  const adminClient = createAdminClient();
+
+  const featuredMonth = normalizeFeaturedMonth(input.featuredMonth);
+  const { error } = await adminClient
+    .from("books")
+    .update({
+      featured_month: featuredMonth,
+      hidden_from_members: input.hiddenFromMembers,
+    })
+    .eq("id", bookId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/admin/library/${bookId}`);
+  revalidatePath("/admin/library");
+  revalidatePath("/library");
+  return { error: null };
 }

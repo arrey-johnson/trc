@@ -3,13 +3,14 @@
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { Button, Input, Label } from "@/components/ui";
+import { currentMonthInTimezone } from "@/lib/books/format";
 
 function formatFileSize(bytes: number): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function BookUploadForm() {
+export function BookUploadForm({ timezone }: { timezone: string }) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,12 +27,17 @@ export function BookUploadForm() {
       return;
     }
 
+    const lower = file.name.toLowerCase();
     const isPdf =
-      file.type === "application/pdf" ||
-      file.name.toLowerCase().endsWith(".pdf");
+      file.type === "application/pdf" || lower.endsWith(".pdf");
+    const isEpub =
+      file.type === "application/epub+zip" ||
+      file.type === "application/epub" ||
+      file.type === "application/x-epub+zip" ||
+      lower.endsWith(".epub");
 
-    if (!isPdf) {
-      setError("Please choose a PDF file.");
+    if (!isPdf && !isEpub) {
+      setError("Please choose a PDF or EPUB file.");
       setFileName(null);
       setFileSize(null);
       e.target.value = "";
@@ -40,7 +46,7 @@ export function BookUploadForm() {
 
     const maxBytes = 50 * 1024 * 1024;
     if (file.size > maxBytes) {
-      setError("PDF must be 50 MB or smaller.");
+      setError("File must be 50 MB or smaller.");
       setFileName(null);
       setFileSize(null);
       e.target.value = "";
@@ -76,6 +82,8 @@ export function BookUploadForm() {
     }
   }
 
+  const defaultMonth = currentMonthInTimezone(timezone);
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
@@ -91,13 +99,13 @@ export function BookUploadForm() {
         <Input id="description" name="description" placeholder="Short description" />
       </div>
       <div>
-        <Label htmlFor="pdf">PDF file</Label>
+        <Label htmlFor="book_file">Book file (PDF or EPUB)</Label>
         <input
           ref={fileRef}
-          id="pdf"
-          name="pdf"
+          id="book_file"
+          name="book_file"
           type="file"
-          accept="application/pdf"
+          accept=".pdf,.epub,application/pdf,application/epub+zip"
           required
           onChange={handleFileChange}
           className="mt-1 block w-full rounded-xl border border-[var(--border)] bg-[var(--input-bg)] px-3 py-2.5 text-sm text-[var(--foreground)] file:mr-3 file:rounded-lg file:border-0 file:bg-brand file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white"
@@ -107,16 +115,32 @@ export function BookUploadForm() {
             {fileName} · {formatFileSize(fileSize)}
           </p>
         )}
+        <p className="mt-1 text-xs text-[var(--muted)]">
+          EPUB gives swipeable page turns on phones. PDF keeps fixed pages.
+        </p>
       </div>
       <div>
-        <Label htmlFor="page_count">Page count</Label>
+        <Label htmlFor="page_count">Page count (PDF only)</Label>
         <Input
           id="page_count"
           name="page_count"
           type="number"
           min={1}
-          placeholder="Auto-detected on upload (enter manually if needed)"
+          placeholder="Auto-detected for PDF; ignored for EPUB"
         />
+      </div>
+      <div>
+        <Label htmlFor="featured_month">Featured month</Label>
+        <Input
+          id="featured_month"
+          name="featured_month"
+          type="month"
+          defaultValue={defaultMonth}
+        />
+        <p className="mt-1 text-xs text-[var(--muted)]">
+          Members only see this book during the selected month. Clear the field
+          for always-on access.
+        </p>
       </div>
       <label className="flex items-center gap-2 text-sm text-[var(--foreground)]">
         <input type="checkbox" name="assign_all" defaultChecked className="rounded" />

@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import { ButtonLink, Card, PageShell } from "@/components/ui";
-import { readingPercent } from "@/lib/books";
+import {
+  formatBookProgressLabel,
+  readingPercent,
+} from "@/lib/books";
 import { getAuthUser, getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { todayForUser } from "@/lib/books";
@@ -58,55 +61,68 @@ export default async function LibraryPage() {
   return (
     <PageShell title="Library" subtitle="Books shared with you">
       <ul className="space-y-3">
-        {(books ?? []).map((book) => {
+        {books.map((book) => {
           const progress = progressMap.get(book.id);
-          const currentPage = progress?.current_page ?? 1;
+          const isEpub = book.format === "epub";
+          const currentPage =
+            progress?.current_page ?? (isEpub ? 0 : 1);
           const percent = readingPercent(currentPage, book.page_count);
-          const pagesToday = todayMap.get(book.id) ?? 0;
+          const progressToday = todayMap.get(book.id) ?? 0;
 
           return (
             <li key={book.id}>
               <Card className="space-y-3 p-5">
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="flex h-14 w-10 shrink-0 items-center justify-center rounded-lg bg-brand text-lg text-white"
-                      aria-hidden
-                    >
-                      📖
-                    </div>
-                    <div className="min-w-0 flex-1">
+                <div className="flex items-start gap-3">
+                  <div
+                    className="flex h-14 w-10 shrink-0 items-center justify-center rounded-lg bg-brand text-lg text-white"
+                    aria-hidden
+                  >
+                    {isEpub ? "📱" : "📖"}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
                       <h2 className="font-semibold text-[var(--foreground)]">
                         {book.title}
                       </h2>
-                      {book.author && (
-                        <p className="text-sm text-[var(--muted)]">by {book.author}</p>
-                      )}
-                      {book.description && (
-                        <p className="mt-1 line-clamp-2 text-sm text-[var(--muted)]">
-                          {book.description}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="mb-1 flex justify-between text-xs text-[var(--muted)]">
-                      <span>
-                        Page {currentPage} of {book.page_count}
+                      <span className="rounded-full bg-[var(--elevated)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                        {book.format}
                       </span>
-                      <span>{percent}%</span>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-[var(--elevated)]">
-                      <div
-                        className="h-full rounded-full bg-brand transition-all"
-                        style={{ width: `${percent}%` }}
-                      />
-                    </div>
-                    {pagesToday > 0 && (
-                      <p className="mt-2 text-xs text-brand-subtle-fg dark:text-brand-muted">
-                        {pagesToday} page{pagesToday === 1 ? "" : "s"} read today
+                    {book.author && (
+                      <p className="text-sm text-[var(--muted)]">by {book.author}</p>
+                    )}
+                    {book.description && (
+                      <p className="mt-1 line-clamp-2 text-sm text-[var(--muted)]">
+                        {book.description}
                       </p>
                     )}
                   </div>
+                </div>
+                <div>
+                  <div className="mb-1 flex justify-between text-xs text-[var(--muted)]">
+                    <span>
+                      {formatBookProgressLabel(
+                        book.format,
+                        currentPage,
+                        book.page_count
+                      )}
+                    </span>
+                    <span>{percent}%</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-[var(--elevated)]">
+                    <div
+                      className="h-full rounded-full bg-brand transition-all"
+                      style={{ width: `${percent}%` }}
+                    />
+                  </div>
+                  {progressToday > 0 && (
+                    <p className="mt-2 text-xs text-brand-subtle-fg dark:text-brand-muted">
+                      {isEpub
+                        ? `+${progressToday}% today`
+                        : `${progressToday} page${progressToday === 1 ? "" : "s"} read today`}
+                    </p>
+                  )}
+                </div>
                 <ButtonLink
                   href={`/library/${book.id}`}
                   className="w-full"

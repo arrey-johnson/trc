@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
@@ -22,6 +22,7 @@ export function PdfReader({
 }: PdfReaderProps) {
   const [page, setPage] = useState(initialPage);
   const [width, setWidth] = useState(360);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     function updateWidth() {
@@ -42,8 +43,25 @@ export function PdfReader({
     onPageChange(clamped);
   }
 
+  function handleTouchStart(clientX: number) {
+    touchStartX.current = clientX;
+  }
+
+  function handleTouchEnd(clientX: number) {
+    if (touchStartX.current === null) return;
+    const delta = clientX - touchStartX.current;
+    touchStartX.current = null;
+    if (Math.abs(delta) < 48) return;
+    if (delta < 0) goToPage(page + 1);
+    else goToPage(page - 1);
+  }
+
   return (
-    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)]">
+    <div
+      className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)]"
+      onTouchStart={(e) => handleTouchStart(e.changedTouches[0].clientX)}
+      onTouchEnd={(e) => handleTouchEnd(e.changedTouches[0].clientX)}
+    >
       <Document
         file={url}
         loading={
@@ -73,7 +91,7 @@ export function PdfReader({
             type="button"
             disabled={page <= 1}
             onClick={() => goToPage(page - 1)}
-            className="rounded-lg px-3 py-1 hover:bg-[var(--elevated)] disabled:opacity-40"
+            className="rounded-lg px-3 py-1 hover:bg-[var(--elevated)] active:scale-95 disabled:opacity-40"
           >
             ←
           </button>
@@ -81,12 +99,15 @@ export function PdfReader({
             type="button"
             disabled={page >= pageCount}
             onClick={() => goToPage(page + 1)}
-            className="rounded-lg px-3 py-1 hover:bg-[var(--elevated)] disabled:opacity-40"
+            className="rounded-lg px-3 py-1 hover:bg-[var(--elevated)] active:scale-95 disabled:opacity-40"
           >
             →
           </button>
         </div>
       </div>
+      <p className="border-t border-[var(--border)] px-4 py-2 text-center text-xs text-[var(--muted)]">
+        Swipe left or right to turn pages
+      </p>
     </div>
   );
 }

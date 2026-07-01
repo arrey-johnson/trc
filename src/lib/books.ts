@@ -1,4 +1,4 @@
-import { getTodayInTimezone } from "@/lib/dates";
+import type { BookFileFormat } from "@/lib/books/format";
 
 export function readingPercent(currentPage: number, pageCount: number): number {
   if (pageCount <= 0) return 0;
@@ -6,10 +6,26 @@ export function readingPercent(currentPage: number, pageCount: number): number {
 }
 
 export function formatReadingProgress(
+  format: BookFileFormat,
   currentPage: number,
   pageCount: number
 ): string {
-  return `Page ${currentPage} of ${pageCount} (${readingPercent(currentPage, pageCount)}%)`;
+  const percent = readingPercent(currentPage, pageCount);
+  if (format === "epub") {
+    return `${percent}% read`;
+  }
+  return `Page ${currentPage} of ${pageCount} (${percent}%)`;
+}
+
+export function formatBookProgressLabel(
+  format: BookFileFormat,
+  currentPage: number,
+  pageCount: number
+): string {
+  if (format === "epub") {
+    return `${readingPercent(currentPage, pageCount)}% read`;
+  }
+  return `Page ${currentPage} of ${pageCount}`;
 }
 
 export function isActiveReader(lastReadAt: string, hours = 48): boolean {
@@ -17,6 +33,4 @@ export function isActiveReader(lastReadAt: string, hours = 48): boolean {
   return diff < hours * 60 * 60 * 1000;
 }
 
-export function todayForUser(timezone: string): string {
-  return getTodayInTimezone(timezone);
-}
+export { todayForUser } from "@/lib/books/dates";

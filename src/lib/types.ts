@@ -1,6 +1,7 @@
 export type RoutineType = "morning" | "evening";
 export type CheckinStatus = "draft" | "complete" | "partial" | "missed";
 export type WhatsappGroupRole = "member" | "admin";
+export type BookFormat = "pdf" | "epub";
 
 export interface User {
   id: string;
@@ -112,7 +113,10 @@ export interface Book {
   author: string;
   description: string;
   storage_path: string;
+  format: BookFormat;
   page_count: number;
+  featured_month: string | null;
+  hidden_from_members: boolean;
   is_active: boolean;
   created_by: string;
   created_at: string;
@@ -131,6 +135,7 @@ export interface BookReadingProgress {
   book_id: string;
   user_id: string;
   current_page: number;
+  epub_location: string | null;
   last_read_at: string;
 }
 

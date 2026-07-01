@@ -1,9 +1,16 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { BookVisibilitySettings } from "@/components/admin/BookVisibilitySettings";
 import { MemberAssignToggle } from "@/components/admin/MemberAssignToggle";
 import { AssignAllMembersButton } from "@/components/admin/AssignAllMembersButton";
 import { Card } from "@/components/ui";
-import { isActiveReader, readingPercent, todayForUser } from "@/lib/books";
+import {
+  formatBookProgressLabel,
+  isActiveReader,
+  readingPercent,
+  todayForUser,
+} from "@/lib/books";
+import { memberVisibilityLabel } from "@/lib/books/format";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -56,12 +63,18 @@ export default async function AdminBookDetailPage({ params }: AdminBookPageProps
       return {
         ...p,
         displayName: member?.display_name ?? "Unknown",
-        pagesToday: dailyMap.get(p.user_id) ?? 0,
+        progressToday: dailyMap.get(p.user_id) ?? 0,
         percent: readingPercent(p.current_page, book.page_count),
         active: isActiveReader(p.last_read_at),
       };
     })
-    .sort((a, b) => b.pagesToday - a.pagesToday);
+    .sort((a, b) => b.progressToday - a.progressToday);
+
+  const visibility = memberVisibilityLabel({
+    featuredMonth: book.featured_month,
+    hiddenFromMembers: book.hidden_from_members,
+    timezone: admin.timezone,
+  });
 
   return (
     <>
@@ -78,9 +91,28 @@ export default async function AdminBookDetailPage({ params }: AdminBookPageProps
           <p className="text-sm text-[var(--muted)]">by {book.author}</p>
         )}
         <p className="mt-1 text-sm text-[var(--muted)]">
-          {book.page_count} pages · {assignedSet.size} assigned
+          {book.format.toUpperCase()} ·{" "}
+          {book.format === "epub"
+            ? "EPUB reader"
+            : `${book.page_count} pages`}{" "}
+          · {assignedSet.size} assigned
         </p>
+        <p className="mt-1 text-sm text-[var(--muted)]">{visibility}</p>
       </header>
+
+      <Card className="mb-6 space-y-3 p-5">
+        <h2 className="font-semibold text-[var(--foreground)]">
+          Member visibility
+        </h2>
+        <BookVisibilitySettings
+          bookId={book.id}
+          format={book.format}
+          pageCount={book.page_count}
+          featuredMonth={book.featured_month}
+          hiddenFromMembers={book.hidden_from_members}
+          timezone={admin.timezone}
+        />
+      </Card>
 
       <Card className="mb-6 space-y-3 p-5">
         <h2 className="font-semibold text-[var(--foreground)]">
@@ -103,8 +135,16 @@ export default async function AdminBookDetailPage({ params }: AdminBookPageProps
                     )}
                   </span>
                   <p className="text-xs text-[var(--muted)]">
-                    {r.percent}% · page {r.current_page}
-                    {r.pagesToday > 0 && ` · ${r.pagesToday} pages today`}
+                    {r.percent}% ·{" "}
+                    {formatBookProgressLabel(
+                      book.format,
+                      r.current_page,
+                      book.page_count
+                    )}
+                    {r.progressToday > 0 &&
+                      (book.format === "epub"
+                        ? ` · +${r.progressToday}% today`
+                        : ` · ${r.progressToday} pages today`)}
                   </p>
                 </div>
               </li>

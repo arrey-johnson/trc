@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { Card } from "@/components/ui";
 import { BookUploadForm } from "@/components/admin/BookUploadForm";
+import { memberVisibilityLabel } from "@/lib/books/format";
 import { requireAdmin } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminLibraryPage() {
-  await requireAdmin();
+  const admin = await requireAdmin();
   const supabase = createClient();
 
   const { data: books } = await supabase
@@ -29,13 +30,13 @@ export default async function AdminLibraryPage() {
       <header className="mb-6">
         <h1 className="text-2xl font-bold text-[var(--foreground)]">Library</h1>
         <p className="mt-1 text-sm text-[var(--muted)]">
-          Upload books and assign them to members
+          Upload PDF or EPUB books and control when members can see them
         </p>
       </header>
 
       <Card className="mb-6 space-y-4 p-5">
         <h2 className="font-semibold text-[var(--foreground)]">Upload a book</h2>
-        <BookUploadForm />
+        <BookUploadForm timezone={admin.timezone} />
       </Card>
 
       {!books?.length ? (
@@ -48,15 +49,29 @@ export default async function AdminLibraryPage() {
             <li key={book.id}>
               <Link href={`/admin/library/${book.id}`}>
                 <Card className="block space-y-2 p-4 transition active:scale-[0.99]">
-                  <h2 className="font-semibold text-[var(--foreground)]">
-                    {book.title}
-                  </h2>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="font-semibold text-[var(--foreground)]">
+                      {book.title}
+                    </h2>
+                    <span className="rounded-full bg-[var(--elevated)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[var(--muted)]">
+                      {book.format}
+                    </span>
+                  </div>
                   {book.author && (
                     <p className="text-sm text-[var(--muted)]">by {book.author}</p>
                   )}
                   <p className="text-xs text-[var(--muted)]">
-                    {book.page_count} pages · {countMap.get(book.id) ?? 0} members
-                    assigned
+                    {book.format === "epub"
+                      ? "EPUB"
+                      : `${book.page_count} pages`}{" "}
+                    · {countMap.get(book.id) ?? 0} members assigned
+                  </p>
+                  <p className="text-xs text-[var(--muted)]">
+                    {memberVisibilityLabel({
+                      featuredMonth: book.featured_month,
+                      hiddenFromMembers: book.hidden_from_members,
+                      timezone: admin.timezone,
+                    })}
                   </p>
                 </Card>
               </Link>
