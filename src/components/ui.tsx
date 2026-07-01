@@ -36,19 +36,21 @@ export function ButtonLink({
   className = "",
   children,
   prefetch = true,
+  ...props
 }: {
   href: string;
   variant?: ButtonVariant;
   className?: string;
   children: React.ReactNode;
   prefetch?: boolean;
-}) {
+} & Omit<React.ComponentPropsWithoutRef<typeof Link>, "href" | "className" | "children" | "prefetch">) {
   return (
     <Link
       href={href}
       prefetch={prefetch}
       scroll={false}
       className={`${baseBtnStyles} ${buttonVariants[variant]} ${className}`}
+      {...props}
     >
       {children}
     </Link>

@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
-import { ButtonLink, Card, PageShell } from "@/components/ui";
+import { LibraryEpubWarmup } from "@/components/library/LibraryEpubWarmup";
+import { LibraryReadLink } from "@/components/library/LibraryReadLink";
+import { Card, PageShell } from "@/components/ui";
 import {
   formatBookProgressLabel,
   readingPercent,
@@ -58,8 +60,13 @@ export default async function LibraryPage() {
   const progressMap = new Map((progressList ?? []).map((p) => [p.book_id, p]));
   const todayMap = new Map((todayLogs ?? []).map((l) => [l.book_id, l.pages_read]));
 
+  const warmupEpubIds = books
+    .filter((book) => book.format === "epub" && progressMap.has(book.id))
+    .map((book) => book.id);
+
   return (
     <PageShell title="Library" subtitle="Books shared with you">
+      <LibraryEpubWarmup bookIds={warmupEpubIds} />
       <ul className="space-y-3">
         {books.map((book) => {
           const progress = progressMap.get(book.id);
@@ -123,13 +130,9 @@ export default async function LibraryPage() {
                     </p>
                   )}
                 </div>
-                <ButtonLink
-                  href={`/library/${book.id}`}
-                  className="w-full"
-                  prefetch
-                >
+                <LibraryReadLink bookId={book.id} format={book.format}>
                   {percent > 0 ? "Continue reading" : "Start reading"}
-                </ButtonLink>
+                </LibraryReadLink>
               </Card>
             </li>
           );

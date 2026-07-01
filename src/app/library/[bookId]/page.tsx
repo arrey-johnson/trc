@@ -1,8 +1,23 @@
+import dynamic from "next/dynamic";
 import { notFound, redirect } from "next/navigation";
-import { BookReaderClient } from "@/components/library/BookReaderClient";
 import { isBookVisibleToMember } from "@/lib/books/format";
 import { getAuthUser, getCurrentUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
+
+const BookReaderClient = dynamic(
+  () =>
+    import("@/components/library/BookReaderClient").then(
+      (mod) => mod.BookReaderClient
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="mx-auto flex min-h-[70vh] max-w-lg items-center justify-center px-4 text-[var(--muted)]">
+        Loading reader…
+      </div>
+    ),
+  }
+);
 
 interface BookPageProps {
   params: { bookId: string };

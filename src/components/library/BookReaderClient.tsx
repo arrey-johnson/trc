@@ -1,36 +1,39 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { saveReadingProgress } from "@/app/library/actions";
-import { Button, PageShell } from "@/components/ui";
+import { useEffect, useState } from "react";
+import { PageShell } from "@/components/ui";
 import { formatReadingProgress } from "@/lib/books";
 import type { BookFormat } from "@/lib/types";
 
-const PdfReader = dynamic(
-  () => import("@/components/library/PdfReader").then((m) => m.PdfReader),
+const BookReaderPdf = dynamic(
+  () =>
+    import("@/components/library/BookReaderPdf").then((mod) => mod.BookReaderPdf),
   {
     ssr: false,
-    loading: () => (
-      <div className="flex h-96 items-center justify-center rounded-2xl bg-[var(--elevated)] text-[var(--muted)]">
-        Loading reader…
-      </div>
-    ),
+    loading: () => <ReaderLoading />,
   }
 );
 
-const EpubReader = dynamic(
-  () => import("@/components/library/EpubReader").then((m) => m.EpubReader),
+const BookReaderEpub = dynamic(
+  () =>
+    import("@/components/library/BookReaderEpub").then(
+      (mod) => mod.BookReaderEpub
+    ),
   {
     ssr: false,
-    loading: () => (
-      <div className="flex h-96 items-center justify-center rounded-2xl bg-[var(--elevated)] text-[var(--muted)]">
-        Loading reader…
-      </div>
-    ),
+    loading: () => <ReaderLoading />,
   }
 );
+
+function ReaderLoading() {
+  return (
+    <div className="flex h-[70vh] min-h-[28rem] items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--card)] text-[var(--muted)]">
+      Loading reader…
+    </div>
+  );
+}
 
 interface BookReaderProps {
   bookId: string;
@@ -49,50 +52,12 @@ export function BookReaderClient({
   initialPage,
   initialEpubLocation,
 }: BookReaderProps) {
-  const [fileUrl, setFileUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   const [currentPage, setCurrentPage] = useState(initialPage);
-  const [, startSave] = useTransition();
 
   useEffect(() => {
-    if (format === "epub") {
-      setFileUrl(`/api/books/${bookId}/file`);
-      setError(null);
-      return;
-    }
-
-    fetch(`/api/books/${bookId}/file?meta=1`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.url) setFileUrl(data.url);
-        else setError(data.error ?? "Could not load book");
-      })
-      .catch(() => setError("Could not load book"));
-  }, [bookId, format]);
-
-  const handlePageChange = useCallback(
-    (page: number) => {
-      setCurrentPage(page);
-      startSave(async () => {
-        await saveReadingProgress(bookId, page);
-      });
-    },
-    [bookId]
-  );
-
-  const handleEpubProgress = useCallback(
-    (progress: { percent: number; epubLocation: string }) => {
-      setCurrentPage(progress.percent);
-      startSave(async () => {
-        await saveReadingProgress(
-          bookId,
-          progress.percent,
-          progress.epubLocation
-        );
-      });
-    },
-    [bookId]
-  );
+    setMounted(true);
+  }, []);
 
   return (
     <PageShell
@@ -107,52 +72,23 @@ export function BookReaderClient({
         </Link>
       }
     >
-      {error && (
-        <div className="rounded-xl bg-red-50 p-4 text-sm text-red-700 dark:bg-red-950/30 dark:text-red-300">
-          {error}
-        </div>
-      )}
+      {!mounted && <ReaderLoading />}
 
-      {fileUrl && !error && format === "pdf" && (
-        <PdfReader
-          url={fileUrl}
+      {mounted && format === "pdf" && (
+        <BookReaderPdf
+          bookId={bookId}
           pageCount={pageCount}
           initialPage={initialPage}
-          onPageChange={handlePageChange}
+          onPageChange={setCurrentPage}
         />
       )}
 
-      {fileUrl && !error && format === "epub" && (
-        <EpubReader
-          url={fileUrl}
-          initialLocation={initialEpubLocation}
-          onProgressChange={handleEpubProgress}
+      {mounted && format === "epub" && (
+        <BookReaderEpub
+          bookId={bookId}
+          initialEpubLocation={initialEpubLocation}
+          onProgressChange={setCurrentPage}
         />
-      )}
-
-      {format === "pdf" && (
-        <div className="mt-4 flex gap-2">
-          <Button
-            type="button"
-            variant="secondary"
-            className="flex-1"
-            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-            disabled={currentPage <= 1}
-          >
-            Previous
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            className="flex-1"
-            onClick={() =>
-              handlePageChange(Math.min(pageCount, currentPage + 1))
-            }
-            disabled={currentPage >= pageCount}
-          >
-            Next page
-          </Button>
-        </div>
       )}
     </PageShell>
   );
