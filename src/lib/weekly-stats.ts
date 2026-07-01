@@ -86,7 +86,10 @@ export function buildWeeklyReport(params: {
 
   const routineStats: RoutineWeekStats[] = routines.map((routine) => {
     const routineCheckins = checkins.filter(
-      (c) => c.routine_id === routine.id && daySet.has(c.date)
+      (c) =>
+        c.routine_id === routine.id &&
+        daySet.has(c.date) &&
+        c.status !== "draft"
     );
     const byDate = new Map(routineCheckins.map((c) => [c.date, c.status]));
 
@@ -106,7 +109,9 @@ export function buildWeeklyReport(params: {
     };
   });
 
-  const weekCheckins = checkins.filter((c) => daySet.has(c.date));
+  const weekCheckins = checkins.filter(
+    (c) => daySet.has(c.date) && c.status !== "draft"
+  );
   const totalSlots = routines.length * days.length;
   const loggedCount = weekCheckins.length;
   const completeCount = weekCheckins.filter((c) => c.status === "complete").length;

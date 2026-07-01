@@ -24,6 +24,7 @@ export async function submitRoutineCheckin(params: {
   routineId: string;
   date: string;
   items: CheckinAnswer[];
+  draftCheckinId?: string | null;
   nonNegotiableReview?: NonNegotiableReview | null;
 }) {
   const profile = await getCurrentUser();
@@ -95,38 +96,73 @@ export async function submitRoutineCheckin(params: {
   }
 
   const status = deriveCheckinStatus(answers);
+  const submittedAt = new Date().toISOString();
 
-  const { data: checkin, error: checkinError } = await supabase
+  const { data: existing } = await supabase
     .from("checkins")
-    .insert({
-      user_id: profile.id,
-      routine_id: params.routineId,
-      date: params.date,
-      status,
-    })
-    .select("id")
-    .single();
+    .select("id, status")
+    .eq("user_id", profile.id)
+    .eq("routine_id", params.routineId)
+    .eq("date", params.date)
+    .maybeSingle();
 
-  if (checkinError || !checkin) {
-    if (checkinError?.code === "23505") {
-      return { error: "You already submitted today's check-in.", checkinId: null };
-    }
-    return {
-      error: friendlyDbError(
-        checkinError?.message ?? "Failed to save check-in.",
-        checkinError?.code
-      ),
-      checkinId: null,
-    };
+  if (existing && existing.status !== "draft") {
+    return { error: "You already submitted today's check-in.", checkinId: null };
   }
 
-  const { error: itemsError } = await supabase.from("checkin_items").insert(
+  let checkinId = existing?.id ?? params.draftCheckinId ?? null;
+
+  if (checkinId) {
+    const { error: updateError } = await supabase
+      .from("checkins")
+      .update({ status, submitted_at: submittedAt })
+      .eq("id", checkinId)
+      .eq("user_id", profile.id)
+      .eq("status", "draft");
+
+    if (updateError) {
+      return {
+        error: friendlyDbError(updateError.message, updateError.code),
+        checkinId: null,
+      };
+    }
+  } else {
+    const { data: checkin, error: checkinError } = await supabase
+      .from("checkins")
+      .insert({
+        user_id: profile.id,
+        routine_id: params.routineId,
+        date: params.date,
+        status,
+        submitted_at: submittedAt,
+      })
+      .select("id")
+      .single();
+
+    if (checkinError || !checkin) {
+      if (checkinError?.code === "23505") {
+        return { error: "You already submitted today's check-in.", checkinId: null };
+      }
+      return {
+        error: friendlyDbError(
+          checkinError?.message ?? "Failed to save check-in.",
+          checkinError?.code
+        ),
+        checkinId: null,
+      };
+    }
+
+    checkinId = checkin.id;
+  }
+
+  const { error: itemsError } = await supabase.from("checkin_items").upsert(
     params.items.map((item) => ({
-      checkin_id: checkin.id,
+      checkin_id: checkinId!,
       routine_item_id: item.routineItemId,
       was_done: item.wasDone,
       reason_if_not_done: item.wasDone ? null : item.reasonIfNotDone.trim(),
-    }))
+    })),
+    { onConflict: "checkin_id,routine_item_id" }
   );
 
   if (itemsError) {
@@ -145,6 +181,7 @@ export async function submitRoutineCheckin(params: {
 
   revalidatePath("/");
   revalidatePath(`/checkin/${params.routineType}`);
+  revalidatePath("/progress");
 
-  return { error: null, checkinId: checkin.id };
+  return { error: null, checkinId };
 }

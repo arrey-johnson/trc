@@ -1,5 +1,5 @@
 export type RoutineType = "morning" | "evening";
-export type CheckinStatus = "complete" | "partial" | "missed";
+export type CheckinStatus = "draft" | "complete" | "partial" | "missed";
 export type WhatsappGroupRole = "member" | "admin";
 
 export interface User {

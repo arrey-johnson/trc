@@ -59,8 +59,44 @@ export default async function HomePage() {
   const routineTypes: RoutineType[] = ["morning", "evening"];
   const loggedCount = routineTypes.filter((type) => {
     const routine = routines?.find((r) => r.type === type);
-    return routine && checkinByRoutine.has(routine.id);
+    const checkin = routine ? checkinByRoutine.get(routine.id) : null;
+    return checkin && checkin.status !== "draft";
   }).length;
+
+  const routineItemCounts = new Map<string, number>();
+  if (routineIds.length) {
+    const { data: routineItems } = await supabase
+      .from("routine_items")
+      .select("routine_id")
+      .in("routine_id", routineIds)
+      .eq("is_active", true);
+
+    for (const row of routineItems ?? []) {
+      routineItemCounts.set(
+        row.routine_id,
+        (routineItemCounts.get(row.routine_id) ?? 0) + 1
+      );
+    }
+  }
+
+  const draftCheckinIds = (todayCheckins ?? [])
+    .filter((c) => c.status === "draft")
+    .map((c) => c.id);
+
+  const draftAnsweredCounts = new Map<string, number>();
+  if (draftCheckinIds.length) {
+    const { data: draftItems } = await supabase
+      .from("checkin_items")
+      .select("checkin_id")
+      .in("checkin_id", draftCheckinIds);
+
+    for (const row of draftItems ?? []) {
+      draftAnsweredCounts.set(
+        row.checkin_id,
+        (draftAnsweredCounts.get(row.checkin_id) ?? 0) + 1
+      );
+    }
+  }
 
   const nnItems = nonNegotiables ?? [];
   const isEvening = isEveningInTimezone(
@@ -72,10 +108,20 @@ export default async function HomePage() {
   const routineCards = routineTypes.map((type) => {
     const routine = routines?.find((r) => r.type === type);
     const checkin = routine ? checkinByRoutine.get(routine.id) : null;
+    const totalItems = routine ? (routineItemCounts.get(routine.id) ?? 0) : 0;
+    const answeredItems = checkin
+      ? (draftAnsweredCounts.get(checkin.id) ?? 0)
+      : 0;
+
     return {
       type,
       checkin: checkin
-        ? { id: checkin.id, status: checkin.status }
+        ? {
+            id: checkin.id,
+            status: checkin.status,
+            answeredItems,
+            totalItems,
+          }
         : null,
     };
   });

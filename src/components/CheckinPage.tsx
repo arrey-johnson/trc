@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { submitRoutineCheckin } from "@/app/checkin/actions";
 import {
@@ -31,25 +31,33 @@ interface CheckinPageProps {
 }
 
 type Phase = "reflection" | "routine";
+type SaveState = "idle" | "saving" | "saved" | "error";
 
-function buildItemsFromData(
-  data: CheckinPageData
-): CheckinItemAnswer[] {
-  return data.items.map((ri) => ({
-    routineItemId: ri.id,
-    label: ri.label,
-    wasDone: null,
-    reasonIfNotDone: "",
-  }));
+function buildItemsFromData(data: CheckinPageData): CheckinItemAnswer[] {
+  return data.items.map((ri) => {
+    const saved = data.savedAnswers[ri.id];
+    return {
+      routineItemId: ri.id,
+      label: ri.label,
+      wasDone: saved ? saved.wasDone : null,
+      reasonIfNotDone: saved?.reasonIfNotDone ?? "",
+    };
+  });
 }
 
 function initialPhase(
   routineType: RoutineType,
   data: CheckinPageData
 ): Phase {
-  return routineType === "evening" && data.hasNonNegotiables
-    ? "reflection"
-    : "routine";
+  const hasSavedAnswers = Object.keys(data.savedAnswers).length > 0;
+  if (
+    routineType === "evening" &&
+    data.hasNonNegotiables &&
+    !hasSavedAnswers
+  ) {
+    return "reflection";
+  }
+  return "routine";
 }
 
 export default function CheckinPage({
@@ -72,6 +80,9 @@ export default function CheckinPage({
   const [alreadySubmitted, setAlreadySubmitted] = useState<string | null>(
     initialData?.existingCheckinId ?? null
   );
+  const [draftCheckinId, setDraftCheckinId] = useState<string | null>(
+    initialData?.draftCheckinId ?? null
+  );
   const [eveningBlocked, setEveningBlocked] = useState(
     initialData?.eveningBlocked ?? false
   );
@@ -88,9 +99,102 @@ export default function CheckinPage({
     boolean | null
   >(null);
   const [reflectionText, setReflectionText] = useState("");
+  const [saveState, setSaveState] = useState<SaveState>("idle");
   const [isPending, startTransition] = useTransition();
+  const userIdRef = useRef<string | null>(null);
+  const reasonSaveTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map()
+  );
 
   const title = ROUTINE_LABELS[routineType];
+  const answeredCount = items.filter((i) => i.wasDone !== null).length;
+
+  const ensureUserId = useCallback(async () => {
+    if (userIdRef.current) return userIdRef.current;
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) userIdRef.current = user.id;
+    return user?.id ?? null;
+  }, [supabase]);
+
+  const persistItem = useCallback(
+    async (item: CheckinItemAnswer) => {
+      if (!routineId || item.wasDone === null) return;
+
+      const userId = await ensureUserId();
+      if (!userId) return;
+
+      setSaveState("saving");
+
+      let checkinId = draftCheckinId;
+
+      if (!checkinId) {
+        const { data: inserted, error: insertError } = await supabase
+          .from("checkins")
+          .insert({
+            user_id: userId,
+            routine_id: routineId,
+            date: today,
+            status: "draft",
+          })
+          .select("id")
+          .single();
+
+        if (insertError?.code === "23505") {
+          const { data: existing } = await supabase
+            .from("checkins")
+            .select("id, status")
+            .eq("user_id", userId)
+            .eq("routine_id", routineId)
+            .eq("date", today)
+            .maybeSingle();
+
+          if (existing?.status === "draft") {
+            checkinId = existing.id;
+          } else if (existing) {
+            setAlreadySubmitted(existing.id);
+            setSaveState("error");
+            return;
+          }
+        } else if (insertError || !inserted) {
+          setSaveState("error");
+          setError(
+            friendlyDbError(
+              insertError?.message ?? "Could not save progress.",
+              insertError?.code
+            )
+          );
+          return;
+        } else {
+          checkinId = inserted.id;
+        }
+
+        setDraftCheckinId(checkinId);
+      }
+
+      const { error: itemError } = await supabase.from("checkin_items").upsert(
+        {
+          checkin_id: checkinId,
+          routine_item_id: item.routineItemId,
+          was_done: item.wasDone,
+          reason_if_not_done: item.wasDone
+            ? null
+            : item.reasonIfNotDone.trim() || null,
+        },
+        { onConflict: "checkin_id,routine_item_id" }
+      );
+
+      if (itemError) {
+        setSaveState("error");
+        setError(friendlyDbError(itemError.message, itemError.code));
+        return;
+      }
+
+      setSaveState("saved");
+    },
+    [routineId, draftCheckinId, today, supabase, ensureUserId]
+  );
 
   const loadRoutine = useCallback(async () => {
     setLoading(true);
@@ -105,6 +209,8 @@ export default function CheckinPage({
       router.replace("/auth/login");
       return;
     }
+
+    userIdRef.current = user.id;
 
     const { data: profile, error: profileError } = await supabase
       .from("users")
@@ -144,9 +250,6 @@ export default function CheckinPage({
 
       const nnCount = count ?? 0;
       setHasNonNegotiables(nnCount > 0);
-      if (nnCount > 0) {
-        setPhase("reflection");
-      }
     }
 
     const { data: routine, error: routineError } = await supabase
@@ -174,7 +277,7 @@ export default function CheckinPage({
     const [existingResult, itemsResult] = await Promise.all([
       supabase
         .from("checkins")
-        .select("id")
+        .select("id, status")
         .eq("user_id", user.id)
         .eq("routine_id", routine.id)
         .eq("date", todayStr)
@@ -193,25 +296,58 @@ export default function CheckinPage({
       return;
     }
 
-    if (existingResult.data) {
-      setAlreadySubmitted(existingResult.data.id);
-      setLoading(false);
-      return;
-    }
-
     if (itemsResult.error) {
       setError(friendlyDbError(itemsResult.error.message, itemsResult.error.code));
       setLoading(false);
       return;
     }
 
+    const existing = existingResult.data;
+    const savedAnswers: CheckinPageData["savedAnswers"] = {};
+
+    if (existing?.status === "draft") {
+      setDraftCheckinId(existing.id);
+      const { data: savedItems } = await supabase
+        .from("checkin_items")
+        .select("routine_item_id, was_done, reason_if_not_done")
+        .eq("checkin_id", existing.id);
+
+      for (const row of savedItems ?? []) {
+        savedAnswers[row.routine_item_id] = {
+          wasDone: row.was_done,
+          reasonIfNotDone: row.reason_if_not_done ?? "",
+        };
+      }
+
+      const hasSavedAnswers = Object.keys(savedAnswers).length > 0;
+      if (routineType === "evening" && !hasSavedAnswers) {
+        const { count: nnCount } = await supabase
+          .from("daily_non_negotiables")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", user.id)
+          .eq("date", todayStr);
+
+        setHasNonNegotiables((nnCount ?? 0) > 0);
+        setPhase((nnCount ?? 0) > 0 ? "reflection" : "routine");
+      } else {
+        setPhase("routine");
+      }
+    } else if (existing) {
+      setAlreadySubmitted(existing.id);
+      setLoading(false);
+      return;
+    }
+
     setItems(
-      (itemsResult.data ?? []).map((ri) => ({
-        routineItemId: ri.id,
-        label: ri.label,
-        wasDone: null,
-        reasonIfNotDone: "",
-      }))
+      (itemsResult.data ?? []).map((ri) => {
+        const saved = savedAnswers[ri.id];
+        return {
+          routineItemId: ri.id,
+          label: ri.label,
+          wasDone: saved ? saved.wasDone : null,
+          reasonIfNotDone: saved?.reasonIfNotDone ?? "",
+        };
+      })
     );
     setLoading(false);
   }, [routineType, supabase, router]);
@@ -222,15 +358,40 @@ export default function CheckinPage({
     }
   }, [initialData, loadRoutine]);
 
+  useEffect(() => {
+    const timers = reasonSaveTimers.current;
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+    };
+  }, []);
+
   function updateItem(
     routineItemId: string,
-    patch: Partial<CheckinItemAnswer>
+    patch: Partial<CheckinItemAnswer>,
+    options?: { debounceReason?: boolean }
   ) {
-    setItems((prev) =>
-      prev.map((item) =>
+    setItems((prev) => {
+      const next = prev.map((item) =>
         item.routineItemId === routineItemId ? { ...item, ...patch } : item
-      )
-    );
+      );
+      const updated = next.find((i) => i.routineItemId === routineItemId);
+      if (!updated || updated.wasDone === null) return next;
+
+      if (options?.debounceReason) {
+        const existing = reasonSaveTimers.current.get(routineItemId);
+        if (existing) clearTimeout(existing);
+        reasonSaveTimers.current.set(
+          routineItemId,
+          setTimeout(() => {
+            void persistItem(updated);
+          }, 400)
+        );
+      } else {
+        void persistItem(updated);
+      }
+
+      return next;
+    });
   }
 
   function handleSubmit() {
@@ -245,6 +406,7 @@ export default function CheckinPage({
         routineType,
         routineId,
         date: today,
+        draftCheckinId,
         items: items.map((item) => ({
           routineItemId: item.routineItemId,
           wasDone: item.wasDone === true,
@@ -371,11 +533,17 @@ export default function CheckinPage({
   return (
     <PageShell
       title={title}
-      subtitle={`Tap ✅ or ❌ for each item — ${today}`}
+      subtitle={`${answeredCount}/${items.length} answered · saves automatically`}
     >
       {error && (
         <p className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-red-700 dark:bg-red-950/40 dark:text-red-300">
           {error}
+        </p>
+      )}
+
+      {saveState === "saved" && (
+        <p className="mb-4 text-center text-xs font-medium text-brand-subtle-fg dark:text-brand-muted">
+          Progress saved
         </p>
       )}
 
@@ -391,13 +559,20 @@ export default function CheckinPage({
               })
             }
             onReasonChange={(reason) =>
-              updateItem(item.routineItemId, { reasonIfNotDone: reason })
+              updateItem(
+                item.routineItemId,
+                { reasonIfNotDone: reason },
+                { debounceReason: true }
+              )
             }
           />
         ))}
       </ul>
 
       <div className="mt-6 flex flex-col gap-2">
+        <ButtonLink href="/" variant="ghost" className="w-full">
+          Save & continue later
+        </ButtonLink>
         {hasNonNegotiables && routineType === "evening" && (
           <Button
             type="button"
@@ -413,7 +588,7 @@ export default function CheckinPage({
         </Button>
         {!allItemsAnswered(items) && (
           <p className="text-center text-xs text-stone-500">
-            Answer every item before submitting
+            Finish every item, then submit to share your report
           </p>
         )}
       </div>

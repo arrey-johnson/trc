@@ -42,6 +42,37 @@ export default async function SharePage({ params }: SharePageProps) {
     );
   }
 
+  if (checkin.status === "draft") {
+    const { data: routine } = await supabase
+      .from("routines")
+      .select("type")
+      .eq("id", checkin.routine_id)
+      .maybeSingle();
+
+    const checkinPath = routine?.type
+      ? `/checkin/${routine.type}`
+      : "/";
+
+    return (
+      <PageShell title="Check-in in progress">
+        <Card className="space-y-4">
+          <p className="text-[var(--foreground)]">
+            You haven&apos;t submitted this check-in yet. Finish answering your
+            routine items, then submit to share your report.
+          </p>
+          <Link href={checkinPath} className="block">
+            <Button className="w-full">Continue check-in</Button>
+          </Link>
+          <Link href="/" className="block">
+            <Button variant="secondary" className="w-full">
+              Back home
+            </Button>
+          </Link>
+        </Card>
+      </PageShell>
+    );
+  }
+
   const { data: profile } = await supabase
     .from("users")
     .select("display_name, timezone")

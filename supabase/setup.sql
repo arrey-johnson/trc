@@ -65,7 +65,7 @@ create table public.checkins (
   user_id uuid not null references public.users (id) on delete cascade,
   routine_id uuid not null references public.routines (id) on delete cascade,
   date date not null,
-  status text not null check (status in ('complete', 'partial', 'missed')),
+  status text not null check (status in ('draft', 'complete', 'partial', 'missed')),
   submitted_at timestamptz not null default now(),
   unique (user_id, routine_id, date)
 );
@@ -100,6 +100,8 @@ create index idx_routines_user_id on public.routines (user_id);
 create index idx_routine_items_routine_id on public.routine_items (routine_id);
 create index idx_checkins_user_date on public.checkins (user_id, date);
 create index idx_checkin_items_checkin_id on public.checkin_items (checkin_id);
+create unique index idx_checkin_items_checkin_routine_item
+  on public.checkin_items (checkin_id, routine_item_id);
 create index idx_reminder_log_user_date on public.reminder_log (user_id, date);
 create index idx_users_email on public.users (email);
 

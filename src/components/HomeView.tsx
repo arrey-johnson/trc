@@ -46,7 +46,12 @@ export interface HomeViewProps {
   unreadCount: number;
   routines: {
     type: RoutineType;
-    checkin: { id: string; status: CheckinStatus } | null;
+    checkin: {
+      id: string;
+      status: CheckinStatus;
+      answeredItems: number;
+      totalItems: number;
+    } | null;
   }[];
 }
 
@@ -178,8 +183,10 @@ export function HomeView({
         {routines.map(({ type, checkin }) => {
           const label = ROUTINE_LABELS[type];
           const meta = ROUTINE_META[type];
-          const isDone = Boolean(checkin);
-          const isEveningLocked = type === "evening" && !isEvening && !isDone;
+          const isSubmitted = Boolean(checkin && checkin.status !== "draft");
+          const isDraft = checkin?.status === "draft";
+          const isEveningLocked =
+            type === "evening" && !isEvening && !isSubmitted && !isDraft;
 
           return (
             <Card key={type} className="space-y-4 p-5">
@@ -202,20 +209,24 @@ export function HomeView({
                       </h2>
                       <span
                         className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          isDone
+                          isSubmitted
                             ? "bg-brand-subtle text-brand-subtle-fg dark:bg-brand-subtle dark:text-brand-muted"
-                            : isEveningLocked
-                              ? "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-300"
-                              : type === "morning"
-                                ? "bg-[var(--accent-morning-subtle)] text-[var(--accent-morning-fg)]"
-                                : "bg-[var(--accent-evening-subtle)] text-[var(--accent-evening-fg)]"
+                            : isDraft
+                              ? "bg-[var(--accent-morning-subtle)] text-[var(--accent-morning-fg)]"
+                              : isEveningLocked
+                                ? "bg-stone-100 text-stone-600 dark:bg-stone-800 dark:text-stone-300"
+                                : type === "morning"
+                                  ? "bg-[var(--accent-morning-subtle)] text-[var(--accent-morning-fg)]"
+                                  : "bg-[var(--accent-evening-subtle)] text-[var(--accent-evening-fg)]"
                         }`}
                       >
-                        {isDone
+                        {isSubmitted
                           ? statusLabel(checkin!.status)
-                          : isEveningLocked
-                            ? `Opens ${eveningUnlockLabel}`
-                            : "Pending"}
+                          : isDraft
+                            ? `${checkin!.answeredItems}/${checkin!.totalItems} saved`
+                            : isEveningLocked
+                              ? `Opens ${eveningUnlockLabel}`
+                              : "Pending"}
                       </span>
                     </div>
                     <Link
@@ -226,16 +237,18 @@ export function HomeView({
                     </Link>
                   </div>
                   <p className="mt-1 text-sm text-[var(--muted)]">
-                    {isDone
+                    {isSubmitted
                       ? "Submitted — tap below to share with your group"
-                      : isEveningLocked
-                        ? `Evening check-in unlocks at ${eveningUnlockLabel}`
-                        : "Tap each item, then share your report to WhatsApp"}
+                      : isDraft
+                        ? "Pick up where you left off — your ticks are saved"
+                        : isEveningLocked
+                          ? `Evening check-in unlocks at ${eveningUnlockLabel}`
+                          : "Tap each item as you go — progress saves automatically"}
                   </p>
                 </div>
               </div>
 
-              {isDone ? (
+              {isSubmitted ? (
                 <ButtonLink
                   href={`/share/${checkin!.id}`}
                   className="w-full"
@@ -249,7 +262,7 @@ export function HomeView({
                 </Button>
               ) : (
                 <ButtonLink href={`/checkin/${type}`} className="w-full">
-                  {meta.logLabel}
+                  {isDraft ? "Continue check-in" : meta.logLabel}
                 </ButtonLink>
               )}
             </Card>

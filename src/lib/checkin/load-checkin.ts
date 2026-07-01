@@ -18,18 +18,10 @@ export async function loadCheckinPageData(
 
   if (routineType === "evening") {
     if (!isEveningInTimezone(timezone, eveningTime)) {
-      return {
-        today,
-        timezone,
-        eveningReminderTime: eveningTime,
-        routineId: null,
-        items: [],
-        existingCheckinId: null,
+      return emptyCheckinData(today, timezone, eveningTime, {
         eveningBlocked: true,
         eveningUnlockLabel: formatTimeForDisplay(eveningTime),
-        hasNonNegotiables: false,
-        error: null,
-      };
+      });
     }
 
     const { count } = await supabase
@@ -50,20 +42,21 @@ export async function loadCheckinPageData(
     .maybeSingle();
 
   if (routineError) {
-    return emptyCheckinData(today, timezone, eveningTime, routineError.message);
+    return emptyCheckinData(today, timezone, eveningTime, {
+      error: routineError.message,
+    });
   }
 
   if (!routine) {
-    return {
-      ...emptyCheckinData(today, timezone, eveningTime, null),
+    return emptyCheckinData(today, timezone, eveningTime, {
       error: "Routine not found. Complete onboarding first.",
-    };
+    });
   }
 
   const [existingResult, itemsResult] = await Promise.all([
     supabase
       .from("checkins")
-      .select("id")
+      .select("id, status")
       .eq("user_id", userId)
       .eq("routine_id", routine.id)
       .eq("date", today)
@@ -77,11 +70,37 @@ export async function loadCheckinPageData(
   ]);
 
   if (existingResult.error) {
-    return emptyCheckinData(today, timezone, eveningTime, existingResult.error.message);
+    return emptyCheckinData(today, timezone, eveningTime, {
+      error: existingResult.error.message,
+    });
   }
 
   if (itemsResult.error) {
-    return emptyCheckinData(today, timezone, eveningTime, itemsResult.error.message);
+    return emptyCheckinData(today, timezone, eveningTime, {
+      error: itemsResult.error.message,
+    });
+  }
+
+  const existing = existingResult.data;
+  let existingCheckinId: string | null = null;
+  let draftCheckinId: string | null = null;
+  const savedAnswers: CheckinPageData["savedAnswers"] = {};
+
+  if (existing?.status === "draft") {
+    draftCheckinId = existing.id;
+    const { data: savedItems } = await supabase
+      .from("checkin_items")
+      .select("routine_item_id, was_done, reason_if_not_done")
+      .eq("checkin_id", existing.id);
+
+    for (const row of savedItems ?? []) {
+      savedAnswers[row.routine_item_id] = {
+        wasDone: row.was_done,
+        reasonIfNotDone: row.reason_if_not_done ?? "",
+      };
+    }
+  } else if (existing) {
+    existingCheckinId = existing.id;
   }
 
   return {
@@ -90,7 +109,9 @@ export async function loadCheckinPageData(
     eveningReminderTime: eveningTime,
     routineId: routine.id,
     items: itemsResult.data ?? [],
-    existingCheckinId: existingResult.data?.id ?? null,
+    existingCheckinId,
+    draftCheckinId,
+    savedAnswers,
     eveningBlocked: false,
     eveningUnlockLabel: "",
     hasNonNegotiables,
@@ -102,7 +123,7 @@ function emptyCheckinData(
   today: string,
   timezone: string,
   eveningReminderTime: string,
-  error: string | null
+  extra: Partial<CheckinPageData> = {}
 ): CheckinPageData {
   return {
     today,
@@ -111,9 +132,12 @@ function emptyCheckinData(
     routineId: null,
     items: [],
     existingCheckinId: null,
+    draftCheckinId: null,
+    savedAnswers: {},
     eveningBlocked: false,
     eveningUnlockLabel: "",
     hasNonNegotiables: false,
-    error,
+    error: null,
+    ...extra,
   };
 }
