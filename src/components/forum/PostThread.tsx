@@ -9,8 +9,10 @@ import {
   usePostAuthorActions,
 } from "@/components/forum/PostAuthorActions";
 import { PostActionsBar } from "@/components/forum/PostActionsBar";
+import { ThreadReplyList } from "@/components/forum/ThreadReplyCard";
 import { UserAvatar } from "@/components/profile/UserAvatar";
 import { Button } from "@/components/ui";
+import type { ForumThreadNode } from "@/lib/forum-thread";
 import {
   FORUM_MAX_CHARS,
   formatPostDate,
@@ -18,88 +20,14 @@ import {
 } from "@/lib/forum";
 import type { ForumPostWithAuthor } from "@/lib/types";
 
-function ReplyCard({
-  post,
-  timezone,
-  currentUserId,
-}: {
-  post: ForumPostWithAuthor;
-  timezone: string;
-  currentUserId: string;
-}) {
-  const isAuthor = post.author_id === currentUserId;
-  const authorActions = usePostAuthorActions({
-    postId: post.id,
-    body: post.body,
-    category: post.category,
-    isReply: true,
-  });
-
-  return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--elevated)] p-3">
-      <div className="flex items-start gap-3">
-        <UserAvatar
-          name={post.author?.display_name ?? "Member"}
-          avatarUrl={post.author?.avatar_url}
-          size="sm"
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2 text-sm">
-                <span className="font-semibold text-[var(--foreground)]">
-                  {post.author?.display_name ?? "Member"}
-                </span>
-                <span className="text-xs text-[var(--muted)]">
-                  {formatPostDate(post.created_at, timezone)}
-                </span>
-              </div>
-            </div>
-            {isAuthor && !authorActions.editing && (
-              <PostOwnerMenu
-                onEdit={authorActions.startEdit}
-                onDelete={authorActions.deletePost}
-                pending={authorActions.pending}
-              />
-            )}
-          </div>
-
-          {isAuthor && authorActions.editing ? (
-            <PostEditForm
-              body={authorActions.body}
-              category={authorActions.category}
-              isReply
-              remaining={authorActions.remaining}
-              error={authorActions.error}
-              pending={authorActions.pending}
-              onBodyChange={authorActions.setBody}
-              onCategoryChange={authorActions.setCategory}
-              onSubmit={authorActions.saveEdit}
-              onCancel={authorActions.cancelEdit}
-            />
-          ) : (
-            <p className="mt-1 whitespace-pre-wrap text-sm text-[var(--foreground)]">
-              {post.body}
-            </p>
-          )}
-
-          {isAuthor && authorActions.error && !authorActions.editing && (
-            <p className="mt-1 text-xs text-red-600">{authorActions.error}</p>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export function PostThread({
   post,
-  replies,
+  replyTree,
   timezone,
   currentUserId,
 }: {
   post: ForumPostWithAuthor;
-  replies: ForumPostWithAuthor[];
+  replyTree: ForumThreadNode[];
   timezone: string;
   currentUserId: string;
 }) {
@@ -126,6 +54,8 @@ export function PostThread({
     createdAt: post.created_at,
     timezone,
   };
+
+  const totalReplies = post.reply_count ?? 0;
 
   function handleReply(e: React.FormEvent) {
     e.preventDefault();
@@ -213,27 +143,24 @@ export function PostThread({
           postId={post.id}
           likedByMe={post.liked_by_me ?? false}
           likeCount={post.like_count ?? 0}
-          replyCount={replies.length}
+          replyCount={totalReplies}
           likePending={likePending}
           onLike={handleLike}
           shareData={shareData}
-          replyHref={`/forum/${post.id}#reply`}
+          replyHref={`#reply`}
         />
       </article>
 
-      {replies.length > 0 && (
-        <div className="space-y-2 pl-2">
+      {replyTree.length > 0 && (
+        <div className="space-y-2">
           <p className="text-sm font-medium text-[var(--muted)]">
-            {replies.length} {replies.length === 1 ? "reply" : "replies"}
+            {totalReplies} {totalReplies === 1 ? "reply" : "replies"}
           </p>
-          {replies.map((r) => (
-            <ReplyCard
-              key={r.id}
-              post={r}
-              timezone={timezone}
-              currentUserId={currentUserId}
-            />
-          ))}
+          <ThreadReplyList
+            nodes={replyTree}
+            timezone={timezone}
+            currentUserId={currentUserId}
+          />
         </div>
       )}
 
@@ -242,6 +169,9 @@ export function PostThread({
         onSubmit={handleReply}
         className="scroll-mt-24 space-y-2 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4"
       >
+        <p className="text-sm font-medium text-[var(--foreground)]">
+          Reply to thread
+        </p>
         <textarea
           value={body}
           onChange={(e) => setBody(e.target.value.slice(0, FORUM_MAX_CHARS))}

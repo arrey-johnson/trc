@@ -91,6 +91,7 @@ export interface ForumPost {
   body: string;
   category: string;
   parent_id: string | null;
+  thread_root_id?: string | null;
   like_count: number;
   reply_count: number;
   is_published: boolean;

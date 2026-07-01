@@ -15,8 +15,11 @@ interface PostActionsBarProps {
   replyCount: number;
   likePending?: boolean;
   onLike: (e: React.MouseEvent) => void;
-  shareData: PostShareData;
+  shareData?: PostShareData;
   replyHref?: string;
+  onReply?: () => void;
+  showShare?: boolean;
+  variant?: "full" | "compact";
   stopPropagation?: boolean;
 }
 
@@ -29,8 +32,16 @@ export function PostActionsBar({
   onLike,
   shareData,
   replyHref,
+  onReply,
+  showShare = true,
+  variant = "full",
   stopPropagation = false,
 }: PostActionsBarProps) {
+  const isCompact = variant === "compact";
+  const actionClass = isCompact
+    ? "flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-[var(--border)] bg-[var(--elevated)] px-2.5 text-xs font-semibold transition active:scale-[0.98]"
+    : actionBase;
+
   function stop(e: React.MouseEvent) {
     if (stopPropagation) {
       e.preventDefault();
@@ -40,7 +51,7 @@ export function PostActionsBar({
 
   return (
     <div
-      className="mt-4 flex items-stretch gap-2"
+      className={`flex items-stretch gap-2 ${isCompact ? "mt-2" : "mt-4"}`}
       onClick={stopPropagation ? stop : undefined}
     >
       <button
@@ -48,31 +59,52 @@ export function PostActionsBar({
         onClick={onLike}
         disabled={likePending}
         aria-label={likedByMe ? "Unlike" : "Like"}
-        className={`${actionBase} ${
+        className={`${actionClass} ${
           likedByMe
             ? "border-red-200 bg-red-50 text-red-600 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400"
             : "text-[var(--foreground)] hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:hover:border-red-900 dark:hover:bg-red-950/30"
         }`}
       >
         <HeartIcon filled={likedByMe} />
-        <span>{likeCount || "Like"}</span>
+        <span className="tabular-nums">{likeCount > 0 ? likeCount : "Like"}</span>
       </button>
 
-      <Link
-        href={replyHref ?? `/forum/${postId}`}
-        onClick={stop}
-        aria-label={`${replyCount} replies`}
-        className={`${actionBase} text-[var(--foreground)] hover:border-brand-border hover:bg-brand-subtle hover:text-brand-subtle-fg dark:hover:border-brand-border dark:hover:bg-brand-subtle dark:hover:text-brand-muted`}
-      >
-        <CommentIcon />
-        <span>{replyCount || "Reply"}</span>
-      </Link>
+      {onReply ? (
+        <button
+          type="button"
+          onClick={(e) => {
+            stop(e);
+            onReply();
+          }}
+          aria-label={`${replyCount} replies`}
+          className={`${actionClass} text-[var(--foreground)] hover:border-brand-border hover:bg-brand-subtle hover:text-brand-subtle-fg dark:hover:border-brand-border dark:hover:bg-brand-subtle dark:hover:text-brand-muted`}
+        >
+          <CommentIcon />
+          <span className="tabular-nums">
+            {replyCount > 0 ? replyCount : "Reply"}
+          </span>
+        </button>
+      ) : (
+        <Link
+          href={replyHref ?? `/forum/${postId}`}
+          onClick={stop}
+          aria-label={`${replyCount} replies`}
+          className={`${actionClass} text-[var(--foreground)] hover:border-brand-border hover:bg-brand-subtle hover:text-brand-subtle-fg dark:hover:border-brand-border dark:hover:bg-brand-subtle dark:hover:text-brand-muted`}
+        >
+          <CommentIcon />
+          <span className="tabular-nums">
+            {replyCount > 0 ? replyCount : "Reply"}
+          </span>
+        </Link>
+      )}
 
-      <SharePostButton
-        data={shareData}
-        onClick={stop}
-        className={`${actionBase} text-[var(--foreground)] hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700 dark:hover:border-sky-800 dark:hover:bg-sky-950/30 dark:hover:text-sky-400`}
-      />
+      {showShare && shareData && (
+        <SharePostButton
+          data={shareData}
+          onClick={stop}
+          className={`${actionClass} text-[var(--foreground)] hover:border-sky-300 hover:bg-sky-50 hover:text-sky-700 dark:hover:border-sky-800 dark:hover:bg-sky-950/30 dark:hover:text-sky-400`}
+        />
+      )}
     </div>
   );
 }

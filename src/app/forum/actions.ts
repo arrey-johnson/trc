@@ -8,6 +8,21 @@ import {
 } from "@/lib/forum";
 import { createClient } from "@/lib/supabase/server";
 
+async function getForumThreadRootId(
+  supabase: ReturnType<typeof createClient>,
+  postId: string
+): Promise<string> {
+  const { data: post } = await supabase
+    .from("forum_posts")
+    .select("id, parent_id, thread_root_id")
+    .eq("id", postId)
+    .maybeSingle();
+
+  if (!post) return postId;
+  if (post.parent_id === null) return post.id;
+  return post.thread_root_id ?? post.parent_id ?? postId;
+}
+
 export async function createFeedPost(formData: FormData) {
   const profile = await getCurrentUser();
   if (!profile?.onboarding_complete) {
@@ -60,18 +75,23 @@ export async function replyToPost(parentId: string, formData: FormData) {
 
   const { data: parent } = await supabase
     .from("forum_posts")
-    .select("id, category")
+    .select("id, category, parent_id, thread_root_id")
     .eq("id", parentId)
-    .is("parent_id", null)
     .maybeSingle();
 
   if (!parent) return { error: "Post not found." };
+
+  const threadRootId =
+    parent.parent_id === null
+      ? parent.id
+      : parent.thread_root_id ?? parent.parent_id;
 
   const { error } = await supabase.from("forum_posts").insert({
     author_id: profile.id,
     body: body.trim(),
     category: parent.category,
     parent_id: parentId,
+    thread_root_id: threadRootId,
     is_published: true,
     title: null,
     updated_at: new Date().toISOString(),
@@ -80,7 +100,7 @@ export async function replyToPost(parentId: string, formData: FormData) {
   if (error) return { error: error.message };
 
   revalidatePath("/forum");
-  revalidatePath(`/forum/${parentId}`);
+  revalidatePath(`/forum/${threadRootId}`);
   return { error: null };
 }
 
@@ -112,8 +132,10 @@ export async function togglePostLike(postId: string) {
     if (error) return { error: error.message, liked: true };
   }
 
+  const threadRootId = await getForumThreadRootId(supabase, postId);
+
   revalidatePath("/forum");
-  revalidatePath(`/forum/${postId}`);
+  revalidatePath(`/forum/${threadRootId}`);
   return { error: null, liked: !existing };
 }
 
@@ -125,7 +147,7 @@ export async function deleteForumPost(postId: string) {
 
   const { data: post } = await supabase
     .from("forum_posts")
-    .select("author_id, parent_id")
+    .select("author_id, parent_id, thread_root_id")
     .eq("id", postId)
     .maybeSingle();
 
@@ -138,10 +160,12 @@ export async function deleteForumPost(postId: string) {
   const { error } = await supabase.from("forum_posts").delete().eq("id", postId);
   if (error) return { error: error.message };
 
+  const threadRootId = await getForumThreadRootId(supabase, postId);
+
   revalidatePath("/forum");
   revalidatePath("/admin/forum");
-  if (post.parent_id) revalidatePath(`/forum/${post.parent_id}`);
-  return { error: null, parentId: post.parent_id };
+  revalidatePath(`/forum/${threadRootId}`);
+  return { error: null, parentId: post.parent_id, threadRootId };
 }
 
 export async function updateForumPost(postId: string, formData: FormData) {
@@ -156,7 +180,7 @@ export async function updateForumPost(postId: string, formData: FormData) {
 
   const { data: post } = await supabase
     .from("forum_posts")
-    .select("author_id, parent_id")
+    .select("author_id, parent_id, thread_root_id")
     .eq("id", postId)
     .maybeSingle();
 
@@ -198,7 +222,8 @@ export async function updateForumPost(postId: string, formData: FormData) {
 
   revalidatePath("/forum");
   revalidatePath("/admin/forum");
-  revalidatePath(`/forum/${post.parent_id ?? postId}`);
+  const threadRootId = await getForumThreadRootId(supabase, postId);
+  revalidatePath(`/forum/${threadRootId}`);
   return { error: null };
 }
 
